@@ -4,7 +4,7 @@
 import { el, slugify, uid, parseYouTubeId, timecode, compact, longDate } from '../util.js';
 import { PATHS, TOPICS } from '../config.js';
 import { hasToken, updateJSON, verifyToken, rateLimit } from '../github.js';
-import { store, loadCatalog, getChannel, getSeries, videosOfChannel } from '../store.js';
+import { store, loadCatalog, getChannel, videosOfChannel } from '../store.js';
 import {
   button, toast, modal, confirmDialog, emptyState, svgIcon, iconButton, tabs, avatar,
 } from '../components.js';
@@ -671,5 +671,3 @@ async function removeCuratedPlaylist(playlist) {
     `Remove playlist: ${playlist.title}`);
   if (saved) rerender();
 }
-
-export { getSeries };
