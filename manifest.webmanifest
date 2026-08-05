@@ -1,0 +1,20 @@
+{
+  "name": "YoutubeMentries",
+  "short_name": "Mentries",
+  "description": "Documentaries and docuseries, all in one place.",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
+  "categories": ["entertainment", "video"],
+  "icons": [
+    {
+      "src": "assets/img/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
