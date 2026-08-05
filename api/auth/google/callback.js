@@ -24,16 +24,19 @@ function decodeIdToken(idToken) {
   }
 }
 
-/** Send the browser back into the app with a message it can show. */
+/**
+ * Send the browser back into the app.
+ *
+ * Appends the expiry of the one-shot state cookies rather than replacing the
+ * Set-Cookie header, so a session cookie queued earlier in this response
+ * survives.
+ */
 function bounce(res, req, hash) {
+  const expire = cookieAttrs({ path: '/api/auth/google', maxAge: 0 });
+  appendCookie(res, `ym_oauth_state=; ${expire}`);
+  appendCookie(res, `ym_oauth_next=; ${expire}`);
   res.statusCode = 302;
   res.setHeader('Location', `${origin(req)}/${hash}`);
-  // The one-shot cookies have done their job.
-  res.setHeader('Set-Cookie', [
-    'ym_oauth_state=; Path=/api/auth/google; HttpOnly; SameSite=Lax; Secure; Max-Age=0',
-    'ym_oauth_next=; Path=/api/auth/google; HttpOnly; SameSite=Lax; Secure; Max-Age=0',
-    ...(Array.isArray(res.getHeader('Set-Cookie')) ? res.getHeader('Set-Cookie') : []),
-  ]);
   res.end();
 }
 
