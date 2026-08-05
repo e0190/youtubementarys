@@ -198,6 +198,12 @@ export function closeAnyMenu() {
   openMenuEl?.remove();
   openMenuEl = null;
 }
+
+/** Hand a popup menu to the shared "only one open at a time" handling. */
+export function registerOpenMenu(menu) {
+  openMenuEl = menu;
+  menu.querySelector('button:not([disabled])')?.focus();
+}
 document.addEventListener('click', closeAnyMenu);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAnyMenu(); });
 
