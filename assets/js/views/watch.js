@@ -43,12 +43,15 @@ export default function watchView({ query = {} }) {
   const playlist = query.list ? (getPlaylist(query.list) || userPlaylist(query.list)) : null;
 
   /* ---- where to start ---- */
+  // If the miniplayer was showing this same video, pick up exactly where it got
+  // to. Either way the miniplayer is dismissed — nothing should still be
+  // playing behind the page you're now watching on.
   const handoff = handoffPosition(video.id);
   const explicitStart = Number(query.t);
   const startAt = Number.isFinite(explicitStart) && explicitStart > 0
     ? explicitStart
     : (handoff ?? resumePosition(video.id));
-  closeMiniplayer(video.id);
+  closeMiniplayer();
 
   /* ---- queue ---- */
   const queue = playlist
