@@ -1,7 +1,7 @@
 // Bootstrap: theme, chrome (topbar + sidebar), routes, sync, service worker.
 
-import { SITE, TOPICS, LS } from './config.js';
-import { $, el, debounce, compact, lsGet } from './util.js';
+import { SITE, TOPICS } from './config.js';
+import { $, el, debounce } from './util.js';
 import {
   store, events, loadLocal, loadCatalog, searchVideos, searchChannels, searchSeries,
   getChannel,
@@ -352,5 +352,3 @@ function closeMiniplayerIfWatching() {
 }
 
 boot();
-
-export { compact, lsGet, LS };
