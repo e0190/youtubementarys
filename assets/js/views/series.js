@@ -1,6 +1,6 @@
 // Docuseries page: hero, seasons, episode list with resume state.
 
-import { el, compact, timecode, durationWords, longDate } from '../util.js';
+import { el, compact, timecode, durationWords, longDate, parseDate } from '../util.js';
 import {
   store, getSeries, getChannel, videosOfSeries, seasonsOf, viewsOf,
   resumePosition, progressRatio, historyEntry, thumbnailFor, thumbnailFallback,
@@ -65,7 +65,7 @@ export default function seriesView({ params, query = {} }) {
 function hero(series, channel, resumeTarget, episodes) {
   const totalSeconds = episodes.reduce((sum, e) => sum + (e.durationSec || 0), 0);
   const totalViews = episodes.reduce((sum, e) => sum + viewsOf(e), 0);
-  const years = episodes.map((e) => e.year || new Date(e.publishedAt || 0).getFullYear()).filter(Boolean);
+  const years = episodes.map((e) => e.year || parseDate(e.publishedAt).getFullYear()).filter(Boolean);
   const yearRange = years.length
     ? (Math.min(...years) === Math.max(...years) ? `${years[0]}` : `${Math.min(...years)}–${Math.max(...years)}`)
     : null;
