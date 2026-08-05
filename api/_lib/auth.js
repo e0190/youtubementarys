@@ -85,27 +85,38 @@ export function parseCookies(req) {
   return out;
 }
 
-function setCookieHeader(res, value) {
+/** Append a cookie without dropping ones already queued on this response. */
+export function appendCookie(res, value) {
   const existing = res.getHeader('Set-Cookie');
   const list = existing ? (Array.isArray(existing) ? existing : [existing]) : [];
   res.setHeader('Set-Cookie', [...list, value]);
 }
 
-export function setSessionCookie(res, token, { days = SESSION_DAYS } = {}) {
-  // `Lax` rather than `Strict` so returning from Google's OAuth redirect still
-  // carries the cookie.
-  setCookieHeader(res, [
-    `${COOKIE}=${encodeURIComponent(token)}`,
-    'Path=/',
+/**
+ * Secure cookies are never sent over plain http, which would make the whole
+ * auth flow untestable on http://localhost. The local dev server sets
+ * YM_INSECURE_COOKIES; every real deployment leaves it unset and gets Secure.
+ */
+const secureFlag = () => (process.env.YM_INSECURE_COOKIES === '1' ? [] : ['Secure']);
+
+export function cookieAttrs({ path = '/', maxAge } = {}) {
+  return [
+    `Path=${path}`,
     'HttpOnly',
+    // `Lax` rather than `Strict` so returning from Google's redirect still
+    // carries the cookie.
     'SameSite=Lax',
-    'Secure',
-    `Max-Age=${days * 86400}`,
-  ].join('; '));
+    ...secureFlag(),
+    `Max-Age=${maxAge}`,
+  ].join('; ');
+}
+
+export function setSessionCookie(res, token, { days = SESSION_DAYS } = {}) {
+  appendCookie(res, `${COOKIE}=${encodeURIComponent(token)}; ${cookieAttrs({ maxAge: days * 86400 })}`);
 }
 
 export function clearSessionCookie(res) {
-  setCookieHeader(res, `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0`);
+  appendCookie(res, `${COOKIE}=; ${cookieAttrs({ maxAge: 0 })}`);
 }
 
 /** Session payload for this request, or null when signed out. */

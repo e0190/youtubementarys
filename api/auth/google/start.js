@@ -5,6 +5,7 @@
 
 import { randomBytes } from 'node:crypto';
 import { route, origin, HttpError, query } from '../../_lib/http.js';
+import { cookieAttrs } from '../../_lib/auth.js';
 
 const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 
@@ -22,9 +23,10 @@ export default route(async (req, res) => {
   const requested = String(query(req).next || '');
   const next = /^#?\/[\w\-/?=&.%]*$/.test(requested) ? requested.replace(/^#?/, '#') : '#/';
 
+  const oneShot = cookieAttrs({ path: '/api/auth/google', maxAge: 600 });
   res.setHeader('Set-Cookie', [
-    `ym_oauth_state=${state}; Path=/api/auth/google; HttpOnly; SameSite=Lax; Secure; Max-Age=600`,
-    `ym_oauth_next=${encodeURIComponent(next)}; Path=/api/auth/google; HttpOnly; SameSite=Lax; Secure; Max-Age=600`,
+    `ym_oauth_state=${state}; ${oneShot}`,
+    `ym_oauth_next=${encodeURIComponent(next)}; ${oneShot}`,
   ]);
 
   const params = new URLSearchParams({
