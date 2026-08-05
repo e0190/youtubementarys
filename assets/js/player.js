@@ -611,9 +611,16 @@ export function createPlayer(container, video, opts = {}) {
 
   /* keyboard shortcuts — ignored while typing */
   function onKey(e) {
+    // Only the player that currently owns the keyboard responds. Otherwise a
+    // watch-page player and a miniplayer would both act on the same keypress,
+    // seeking two videos at once.
+    if (activePlayer !== handle) return;
+
     const target = e.target;
     if (target.closest('input, textarea, select, [contenteditable="true"]')) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    // Don't hijack keys while a dialog is open.
+    if (document.querySelector('.modal-backdrop')) return;
 
     const key = e.key.toLowerCase();
     const handlers = {
@@ -659,9 +666,9 @@ export function createPlayer(container, video, opts = {}) {
     buildMenu();
   }
 
-  document.addEventListener('keydown', onKey);
+  onDocument(document, 'keydown', onKey);
 
-  return {
+  const handle = {
     el: stage,
     bus,
     on: bus.on,
@@ -678,8 +685,13 @@ export function createPlayer(container, video, opts = {}) {
       nextBtn.setAttribute('aria-label', label);
       nextBtn.title = label;
     },
+    /** Take keyboard focus for shortcuts (the watch page calls this). */
+    claimKeyboard() { activePlayer = handle; },
+
     destroy() {
-      document.removeEventListener('keydown', onKey);
+      for (const off of docListeners) off();
+      docListeners.length = 0;
+      if (activePlayer === handle) activePlayer = null;
       clearTimeout(hideTimer);
       clearTimeout(showToast.timer);
       engine.destroy();
@@ -687,6 +699,16 @@ export function createPlayer(container, video, opts = {}) {
       stage.remove();
     },
   };
+
+  if (keyboard) activePlayer = handle;
+  return handle;
 }
+
+/**
+ * The one player that keyboard shortcuts drive. The miniplayer is created with
+ * `keyboard: false`, so pressing space while browsing scrolls the page instead
+ * of pausing something in the corner.
+ */
+let activePlayer = null;
 
 export { ICONS, icon };
