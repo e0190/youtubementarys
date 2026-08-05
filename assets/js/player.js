@@ -5,7 +5,7 @@
 // interface (play/pause/seek/…) and the same custom control bar, so the rest of
 // the app never has to care which one it got.
 
-import { el, $, timecode, clamp, emitter, throttle } from './util.js';
+import { el, timecode, clamp, emitter, throttle } from './util.js';
 
 /* ---------- YouTube IFrame API loader ---------- */
 
