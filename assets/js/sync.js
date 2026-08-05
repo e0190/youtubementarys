@@ -7,9 +7,7 @@
 
 import { PATHS } from './config.js';
 import { hasToken, writeJSON, updateJSON, readJSON } from './github.js';
-import {
-  store, events, adoptUser, mergePendingStats, clearPendingStats,
-} from './store.js';
+import { store, events, adoptUser, clearPendingStats } from './store.js';
 
 const DEBOUNCE_MS = 6000;
 
@@ -56,31 +54,40 @@ async function pushUser() {
 }
 
 async function pushStats() {
-  const pending = store.pendingStats;
-  const hasWork = Object.keys(pending.views).length || Object.keys(pending.likes).length;
-  if (!hasWork) return;
+  // Take the deltas out of the store up front, so counts recorded while the
+  // request is in flight accumulate cleanly for the next run instead of being
+  // written twice or dropped.
+  const pending = takePending();
+  if (!pending) return;
 
-  // Snapshot before the network call so counts recorded mid-flight aren't lost.
-  const snapshot = mergePendingStats.bind(null);
-  clearPendingStats();
   try {
-    await updateJSON('data/stats.json', (remote) => snapshotApply(remote, pending), {
+    await updateJSON('data/stats.json', (remote) => applyDeltas(remote, pending), {
       message: 'sync: view and like counts',
       fallback: { views: {}, likes: {} },
     });
   } catch (err) {
-    // Put the deltas back so the next run retries them.
-    for (const kind of ['views', 'likes']) {
-      for (const [id, delta] of Object.entries(pending[kind])) {
-        store.pendingStats[kind][id] = (store.pendingStats[kind][id] || 0) + delta;
-      }
-    }
-    void snapshot;
+    returnPending(pending); // retry these on the next flush
     throw err;
   }
 }
 
-function snapshotApply(remote, deltas) {
+function takePending() {
+  const { views, likes } = store.pendingStats;
+  if (!Object.keys(views).length && !Object.keys(likes).length) return null;
+  const snapshot = { views: { ...views }, likes: { ...likes } };
+  clearPendingStats();
+  return snapshot;
+}
+
+function returnPending(pending) {
+  for (const kind of ['views', 'likes']) {
+    for (const [id, delta] of Object.entries(pending[kind])) {
+      store.pendingStats[kind][id] = (store.pendingStats[kind][id] || 0) + delta;
+    }
+  }
+}
+
+function applyDeltas(remote, deltas) {
   const out = { views: {}, likes: {}, ...(remote || {}) };
   for (const kind of ['views', 'likes']) {
     out[kind] = { ...out[kind] };
