@@ -3,10 +3,10 @@
 import { el } from '../util.js';
 import {
   store, subscriptionFeed, historyVideos, likedVideos, watchLaterVideos,
-  clearHistory, getChannel, createPlaylist, resumePosition,
+  clearHistory, getChannel, createPlaylist,
 } from '../store.js';
 import {
-  videoCard, playlistCard, channelCard, grid, emptyState, button, sectionTitle,
+  videoCard, playlistCard, grid, emptyState, button, sectionTitle,
   confirmDialog, toast, modal, skeletonGrid,
 } from '../components.js';
 import { navigate, href } from '../router.js';
@@ -110,15 +110,9 @@ function historySection(config) {
         },
       }),
       `${videos.length} ${videos.length === 1 ? 'title' : 'titles'}`),
-    grid(videos.map((v) => {
-      const at = resumePosition(v.id);
-      return videoCard(v, {
-        layout: 'row',
-        showDescription: true,
-        onRemove: rerender,
-      });
-      // `at` is reflected by the progress bar the card already draws.
-    }), { className: 'results-list' }),
+    // The card draws its own resume bar from the stored progress.
+    grid(videos.map((v) => videoCard(v, { layout: 'row', showDescription: true, onRemove: rerender })),
+      { className: 'results-list' }),
   ];
 }
 
@@ -196,5 +190,3 @@ function playlistsSection(config) {
   }
   return nodes;
 }
-
-export { channelCard };
