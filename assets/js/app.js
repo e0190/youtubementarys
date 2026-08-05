@@ -7,8 +7,14 @@ import {
   getChannel,
 } from './store.js';
 import * as sync from './sync.js';
+import {
+  auth, authEvents, isSignedIn, isAdmin, loadSession, promptSignIn, signOut,
+  consumeAuthRedirect,
+} from './auth.js';
 import { route, start as startRouter, resolve, navigate, href, parseHash, routerEvents } from './router.js';
-import { avatar, svgIcon, toast, emptyState, button } from './components.js';
+import {
+  avatar, svgIcon, toast, emptyState, button, closeAnyMenu, registerOpenMenu,
+} from './components.js';
 
 import homeView from './views/home.js';
 import watchView from './views/watch.js';
