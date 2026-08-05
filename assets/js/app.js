@@ -110,7 +110,7 @@ function buildSidebar() {
       }, svgIcon('globe', 20), el('span', { class: 'nav-label' }, topic)))),
 
     el('div', { class: 'nav-group' },
-      navLink('/studio', 'Studio', 'studio'),
+      isAdmin() ? navLink('/studio', 'Studio', 'studio') : null,
       navLink('/settings', 'Settings', 'settings')),
 
     el('div', { class: 'sidebar-footer' },
