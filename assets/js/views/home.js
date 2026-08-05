@@ -2,9 +2,7 @@
 
 import { el } from '../util.js';
 import { TOPICS } from '../config.js';
-import {
-  store, homeFeed, continueWatching, subscriptionFeed, seriesOfChannel, getChannel,
-} from '../store.js';
+import { store, homeFeed, continueWatching, subscriptionFeed } from '../store.js';
 import {
   videoCard, seriesCard, channelCard, grid, shelf, chipBar, skeletonGrid,
   emptyState, sectionTitle, button,
@@ -120,20 +118,3 @@ function exploreSections(topic) {
   return nodes;
 }
 
-/** Channel shelves used by the "Home" tab of a channel page. */
-export function channelHomeShelves(channel) {
-  const nodes = [];
-  const series = seriesOfChannel(channel.id);
-  if (series.length) {
-    nodes.push(shelf('Series', series.map(seriesCard)));
-  }
-  const related = store.catalog.channels
-    .filter((c) => c.id !== channel.id && (c.topics || []).some((t) => (channel.topics || []).includes(t)))
-    .slice(0, 8);
-  if (related.length) {
-    nodes.push(shelf('Related channels', related.map((c) => channelCard(c, { compactMode: true }))));
-  }
-  return nodes;
-}
-
-export { getChannel };
