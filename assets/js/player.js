@@ -263,8 +263,18 @@ export function createPlayer(container, video, opts = {}) {
   const bus = emitter();
   const {
     startAt = 0, autoplay = false, volume = 1, muted = false, rate = 1,
-    onNext = null, nextLabel = '',
+    onNext = null, nextLabel = '', keyboard = true,
   } = opts;
+
+  // Every document-level listener registered below is collected here and torn
+  // down in destroy(). Without this, navigating between videos leaves a
+  // listener per player behind, and old players keep reacting to clicks and
+  // keystrokes long after their DOM has gone.
+  const docListeners = [];
+  const onDocument = (target, type, fn, options) => {
+    target.addEventListener(type, fn, options);
+    docListeners.push(() => target.removeEventListener(type, fn, options));
+  };
 
   const stage = el('div', { class: 'player-stage' });
   const surface = el('div', { class: 'player-surface' });
@@ -575,7 +585,7 @@ export function createPlayer(container, video, opts = {}) {
     menu.hidden = !menu.hidden;
     settingsBtn.classList.toggle('is-active', !menu.hidden);
   });
-  document.addEventListener('click', () => {
+  onDocument(document, 'click', () => {
     menu.hidden = true;
     settingsBtn.classList.remove('is-active');
   });
