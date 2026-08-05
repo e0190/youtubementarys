@@ -1,44 +1,39 @@
 {
   "series": [
     {
-      "id": "s_garage_stories",
-      "title": "Garage Stories",
-      "channelId": "ch_gearhouse",
-      "description": "Four short films about buying, testing and abusing cars — a cheap-car challenge, a hot hatch review, a rally-stage detour and a cross-continent run.",
-      "poster": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/WhatCarCanYouGetForAGrand.jpg",
-      "backdrop": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/SubaruOutbackOnStreetAndDirt.jpg",
-      "topics": ["Travel", "Technology", "Sports"],
+      "id": "s_health_reel",
+      "title": "The Health Reel",
+      "channelId": "ch_prelinger",
+      "description": "Two seasons of mid-century public-health filmmaking — posture, soap, sleep and the five food groups, delivered with total conviction. A record of how a state taught its citizens to look after themselves.",
+      "poster": "https://archive.org/services/img/HealthYo1953",
+      "backdrop": "https://archive.org/services/img/EatforHe1954",
+      "topics": ["Health", "History", "Science"],
       "seasons": [
         {
           "number": 1,
-          "title": "Season 1",
-          "episodes": [
-            "v_grand_challenge",
-            "v_gti_review",
-            "v_outback_dirt",
-            "v_bullrun"
-          ]
+          "title": "Season 1 — The Body",
+          "episodes": ["v_posture", "v_skin", "v_personal_hygiene"]
+        },
+        {
+          "number": 2,
+          "title": "Season 2 — Food and Rest",
+          "episodes": ["v_eat_for_health", "v_good_eating", "v_sleep_for_health"]
         }
       ]
     },
     {
-      "id": "s_open_movies",
-      "title": "The Open Movie Project",
-      "channelId": "ch_openframe",
-      "description": "The Blender Foundation's open movies, released under Creative Commons so anyone can study, remix and redistribute the films and every asset behind them.",
-      "poster": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg",
-      "backdrop": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg",
-      "topics": ["Art", "Technology", "Science"],
+      "id": "s_made_in_america",
+      "title": "Made in America",
+      "channelId": "ch_machineage",
+      "description": "Four films about industry at full confidence: a banana empire, a newsroom inventing the wire photo, a garage trade on the rise, and a car plant throwing itself a parade.",
+      "poster": "https://archive.org/services/img/Automoti1940",
+      "backdrop": "https://archive.org/services/img/AboutBan1935",
+      "topics": ["Technology", "Economics", "History"],
       "seasons": [
         {
           "number": 1,
           "title": "Season 1",
-          "episodes": [
-            "v_elephants_dream",
-            "v_big_buck_bunny",
-            "v_sintel",
-            "v_tears_of_steel"
-          ]
+          "episodes": ["v_about_bananas", "v_spot_news", "v_automotive_service", "v_achievement_usa"]
         }
       ]
     }
