@@ -57,7 +57,7 @@ export default function seriesView({ params, query = {} }) {
       el('h2', { class: 'section-title' }, activeSeason.title),
       el('div', { class: 'card-meta' }, `${activeSeason.episodes.length} episodes`)),
     el('div', { class: 'episode-list' },
-      ...activeSeason.episodes.map((ep, i) => episodeRow(ep, i + 1, series)))));
+      ...activeSeason.episodes.map((ep, i) => episodeRow(ep, i + 1)))));
 
   setView(nodes, { title: series.title });
 }
@@ -107,7 +107,7 @@ function hero(series, channel, resumeTarget, episodes) {
         channel ? subscribeButton(channel.id) : null)));
 }
 
-function episodeRow(ep, number, series) {
+function episodeRow(ep, number) {
   const link = href('/watch', { v: ep.id });
   const progress = progressRatio(ep.id);
   const primary = thumbnailFor(ep);
