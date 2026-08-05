@@ -87,9 +87,26 @@ export function durationWords(seconds) {
   return `${m} min`;
 }
 
+/**
+ * Parse a catalog date.
+ *
+ * `new Date('1953-01-01')` is UTC midnight, which renders as 31 Dec 1952 for
+ * anyone west of Greenwich. Date-only strings are calendar dates, not instants,
+ * so build them in local time instead.
+ */
+export function parseDate(value) {
+  if (value instanceof Date) return value;
+  const s = String(value ?? '');
+  const dateOnly = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnly) {
+    return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+  }
+  return new Date(s);
+}
+
 /** ISO date -> "3 years ago" */
 export function timeAgo(iso) {
-  const then = new Date(iso).getTime();
+  const then = parseDate(iso).getTime();
   if (!Number.isFinite(then)) return '';
   const secs = Math.max(0, (Date.now() - then) / 1000);
   const steps = [
@@ -106,7 +123,7 @@ export function timeAgo(iso) {
 }
 
 export function longDate(iso) {
-  const d = new Date(iso);
+  const d = parseDate(iso);
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
