@@ -382,20 +382,33 @@ function buildComments(video) {
   const section = el('section', { class: 'comments' });
   const listHost = el('div', {});
   let comments = [];
+  let loading = true;
 
   const paint = () => {
-    section.replaceChildren(
+    setChildren(section,
       el('div', { class: 'comments-head' },
-        el('h2', { class: 'section-title' }, `${comments.length} ${comments.length === 1 ? 'comment' : 'comments'}`)),
+        el('h2', { class: 'section-title' },
+          loading ? 'Comments' : `${comments.length} ${comments.length === 1 ? 'comment' : 'comments'}`)),
       composer(),
       listHost);
 
-    listHost.replaceChildren(...(comments.length
+    setChildren(listHost, ...(comments.length
       ? comments.map(commentNode)
-      : [el('p', { class: 'muted' }, 'No comments yet. Be the first to say something.')]));
+      : [el('p', { class: 'muted' },
+          loading ? 'Loading comments…' : 'No comments yet. Be the first to say something.')]));
   };
 
   const composer = () => {
+    if (!isSignedIn() && auth.features.auth) {
+      return el('div', { class: 'comment-composer' },
+        avatar({ name: 'Guest' }, 40),
+        el('div', { class: 'comment-composer-body' },
+          el('button', {
+            class: 'comment-signin',
+            onclick: () => promptSignIn({ reason: 'Sign in to join the conversation.' }).then((user) => { if (user) paint(); }),
+          }, 'Sign in to comment')));
+    }
+
     const input = el('textarea', {
       class: 'comment-input', rows: '1', placeholder: 'Add a comment…', maxlength: '2000',
       oninput: (e) => {
@@ -412,7 +425,7 @@ function buildComments(video) {
       button('Comment', { variant: 'primary', onClick: () => submit(input, actions) }));
 
     return el('div', { class: 'comment-composer' },
-      avatar(store.user, 40),
+      avatar(auth.user || store.user, 40),
       el('div', { class: 'comment-composer-body' }, input, actions));
   };
 
@@ -420,69 +433,82 @@ function buildComments(video) {
     const text = input.value.trim();
     if (!text) return;
 
-    const comment = {
-      id: `c_${Date.now().toString(36)}`,
-      author: store.user.name || 'Guest',
-      authorId: store.user.id,
-      avatar: store.user.avatar || null,
+    // Optimistic: show it straight away, reconcile with the server's copy after.
+    const pending = {
+      id: `pending_${Date.now().toString(36)}`,
+      author: auth.user?.name || store.user.name,
+      authorId: auth.user?.id || store.user.id,
       text,
       at: new Date().toISOString(),
       likes: 0,
+      pending: true,
     };
-
-    // Optimistic: show it immediately, then try to persist.
-    comments.unshift(comment);
+    comments = [pending, ...comments];
     input.value = '';
     input.style.height = 'auto';
     actions.hidden = true;
     paint();
 
-    if (!hasToken()) {
-      toast('Comment shown locally — add a GitHub token in Settings to publish it.', { duration: 5000 });
-      return;
-    }
     try {
-      await updateJSON(PATHS.comments(video.id), (data) => {
-        const list = Array.isArray(data?.comments) ? data.comments : [];
-        return { videoId: video.id, comments: [comment, ...list] };
-      }, {
-        message: `comment on ${video.id}`,
-        fallback: { videoId: video.id, comments: [] },
-      });
-    } catch (err) {
-      comments = comments.filter((c) => c.id !== comment.id);
+      const { comment } = await api.postComment(video.id, text);
+      comments = comments.map((c) => (c.id === pending.id ? comment : c));
       paint();
-      toast(`Comment failed: ${err.message}`, { duration: 6000 });
+    } catch (err) {
+      comments = comments.filter((c) => c.id !== pending.id);
+      paint();
+      if (err.status === 401) {
+        promptSignIn({ reason: 'Sign in to post your comment.' });
+      } else {
+        toast(`Comment failed: ${err.message}`, { duration: 6000 });
+      }
+    }
+  };
+
+  const remove = async (comment) => {
+    const previous = comments;
+    comments = comments.filter((c) => c.id !== comment.id);
+    paint();
+    try {
+      await api.deleteComment(video.id, comment.id);
+      toast('Comment deleted');
+    } catch (err) {
+      comments = previous;
+      paint();
+      toast(`Could not delete: ${err.message}`);
     }
   };
 
   const commentNode = (c) => {
+    const likeCount = el('span', { class: 'comment-likes' }, c.likes ? String(c.likes) : '');
     const likeBtn = iconButton('like', 'Like this comment', () => {
       c.likes = (c.likes || 0) + 1;
-      likeCount.textContent = c.likes ? String(c.likes) : '';
+      likeCount.textContent = String(c.likes);
     }, { size: 18 });
-    const likeCount = el('span', { class: 'comment-likes' }, c.likes ? String(c.likes) : '');
 
-    return el('article', { class: 'comment' },
+    const mine = auth.user && c.authorId === auth.user.id;
+
+    return el('article', { class: `comment${c.pending ? ' is-pending' : ''}` },
       avatar({ name: c.author, avatar: c.avatar }, 40),
       el('div', { class: 'comment-body' },
         el('div', { class: 'comment-head' },
           el('span', { class: 'comment-author' }, c.author),
-          el('span', { class: 'comment-time' }, timeAgo(c.at))),
+          el('span', { class: 'comment-time' }, c.pending ? 'Posting…' : timeAgo(c.at))),
         el('div', { class: 'comment-text' }, c.text),
-        el('div', { class: 'comment-actions' }, likeBtn, likeCount)));
+        el('div', { class: 'comment-actions' },
+          likeBtn,
+          likeCount,
+          mine && !c.pending
+            ? iconButton('trash', 'Delete this comment', () => remove(c), { size: 18 })
+            : null)));
   };
 
   paint();
 
-  // Comments live in their own file per video, so this is one small extra fetch.
-  readJSON(PATHS.comments(video.id))
-    .then(({ data }) => {
-      if (!Array.isArray(data?.comments)) return;
-      comments = data.comments;
-      paint();
-    })
-    .catch(() => { /* no comments file yet — the empty state is correct */ });
+  // Comments live in their own file per video, so this is one small extra call.
+  api.getComments(video.id)
+    .then(({ comments: list }) => { comments = Array.isArray(list) ? list : []; })
+    .catch(() => { /* none yet, or offline — the empty state is right either way */ })
+    .finally(() => { loading = false; paint(); });
 
   return section;
 }
