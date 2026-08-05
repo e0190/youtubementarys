@@ -65,11 +65,15 @@ export function loadLocal() {
   return store;
 }
 
-/** Fetch the catalog from the repo. Falls back to the localStorage cache on failure. */
+/**
+ * Fetch the catalog. The data/ files are static assets on the CDN, so this
+ * costs no serverless invocations. Falls back to the localStorage cache when
+ * the network is unavailable.
+ */
 export async function loadCatalog({ fresh = false } = {}) {
   const pull = async (path, key, fallback) => {
     try {
-      const { data } = await readJSON(path, { fresh });
+      const data = await fetchStaticJSON(path, { fresh });
       const list = data?.[key];
       return Array.isArray(list) ? list : fallback;
     } catch (err) {
@@ -83,9 +87,7 @@ export async function loadCatalog({ fresh = false } = {}) {
     pull(PATHS.videos, 'videos', []),
     pull(PATHS.series, 'series', []),
     pull(PATHS.playlists, 'playlists', []),
-    (async () => {
-      try { return (await readJSON('data/stats.json', { fresh })).data; } catch { return null; }
-    })(),
+    fetchStaticJSON('data/stats.json', { fresh }).catch(() => null),
   ]);
 
   const anyFailed = [channels, videos, series, playlists].some((x) => x === null);
