@@ -16,6 +16,9 @@ export const store = {
   loadError: null,
   catalog: { channels: [], videos: [], series: [], playlists: [] },
   stats: { views: {}, likes: {}, dislikes: {} },
+  // Counter changes made on this device that haven't been merged into
+  // data/stats.json yet. sync.js drains this; see mergePendingStats().
+  pendingStats: { views: {}, likes: {} },
   user: null,
   settings: { ...DEFAULT_SETTINGS },
   index: {
@@ -38,6 +41,7 @@ function blankUser() {
     name: 'Guest',
     avatar: null,
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     subscriptions: [],
     history: [],      // { videoId, position, duration, updatedAt, completed }
     ratings: {},      // videoId -> 1 | -1
