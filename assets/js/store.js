@@ -6,7 +6,7 @@
 // repo in the background when a token is configured.
 
 import { PATHS, LS, DEFAULT_SETTINGS } from './config.js';
-import { readJSON } from './github.js';
+import { fetchStaticJSON } from './api.js';
 import { lsGet, lsSet, uid, emitter, seededShuffle } from './util.js';
 
 export const events = emitter();
