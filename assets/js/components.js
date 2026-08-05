@@ -96,10 +96,18 @@ export function thumbImage(video, alt = '') {
   const img = el('img', {
     class: 'thumb-img', src: primary, alt, loading: 'lazy', decoding: 'async',
   });
-  img.addEventListener('error', function onError() {
+
+  const degrade = () => {
     if (fallback && img.src !== fallback) img.src = fallback;
     else img.replaceWith(el('div', { class: 'thumb-placeholder' }, svgIcon('film', 32)));
-  }, { once: false });
+  };
+
+  img.addEventListener('error', degrade);
+  // A video with no maxresdefault still returns 200 — with a 120x90 grey
+  // placeholder — so a successful load isn't proof the image is real.
+  img.addEventListener('load', () => {
+    if (img.naturalWidth <= 120 && img.naturalHeight <= 90) degrade();
+  });
   return img;
 }
 
