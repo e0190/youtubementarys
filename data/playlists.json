@@ -1,0 +1,31 @@
+{
+  "playlists": [
+    {
+      "id": "pl_open_licence",
+      "title": "Everything under an open licence",
+      "description": "Films you can legally download, remix and re-cut — every asset published alongside the finished piece.",
+      "channelId": "ch_openframe",
+      "videoIds": [
+        "v_elephants_dream",
+        "v_big_buck_bunny",
+        "v_sintel",
+        "v_tears_of_steel"
+      ],
+      "visibility": "public"
+    },
+    {
+      "id": "pl_short_watch",
+      "title": "Under two minutes",
+      "description": "A quick lap of the catalog when you don't have an evening to give it.",
+      "channelId": "ch_gearhouse",
+      "videoIds": [
+        "v_grand_challenge",
+        "v_gti_review",
+        "v_outback_dirt",
+        "v_bullrun",
+        "v_me_at_the_zoo"
+      ],
+      "visibility": "public"
+    }
+  ]
+}
