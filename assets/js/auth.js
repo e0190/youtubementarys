@@ -4,7 +4,7 @@
 // Signing in adopts that local data and starts syncing it. That's deliberate:
 // nobody should hit a login wall before they can watch anything.
 
-import { el, emitter, lsGet, lsSet } from './util.js';
+import { el, emitter, lsSet } from './util.js';
 import { api, ApiError } from './api.js';
 import { LS } from './config.js';
 
@@ -221,5 +221,3 @@ export function consumeAuthRedirect() {
   history.replaceState(null, '', `${hash.slice(0, qIndex)}${rest ? `?${rest}` : ''}` || '#/');
   return status;
 }
-
-export { lsGet };
