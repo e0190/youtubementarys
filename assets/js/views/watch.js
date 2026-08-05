@@ -1,8 +1,8 @@
 // Watch page: player, metadata, actions, series strip, up-next rail, comments.
 
-import { el, compact, timeAgo, longDate, timecode, throttle } from '../util.js';
-import { PATHS } from '../config.js';
-import { readJSON, updateJSON, hasToken } from '../github.js';
+import { el, compact, timeAgo, longDate, timecode, throttle, setChildren } from '../util.js';
+import { api } from '../api.js';
+import { auth, isSignedIn, promptSignIn } from '../auth.js';
 import {
   store, getVideo, getChannel, getSeries, getPlaylist, playlistVideos,
   relatedTo, nextEpisode, videosOfSeries, seasonsOf, viewsOf, likesOf, ratingOf,
