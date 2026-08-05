@@ -344,18 +344,6 @@ function bumpStat(kind, videoId, delta) {
   events.emit('dirty', 'stats');
 }
 
-/** Fold this device's pending deltas into a stats document read from the repo. */
-export function mergePendingStats(remote) {
-  const out = { views: {}, likes: {}, ...(remote || {}) };
-  for (const kind of ['views', 'likes']) {
-    out[kind] = { ...out[kind] };
-    for (const [id, delta] of Object.entries(store.pendingStats[kind])) {
-      out[kind][id] = (out[kind][id] || 0) + delta;
-    }
-  }
-  return out;
-}
-
 export function clearPendingStats() {
   store.pendingStats = { views: {}, likes: {} };
 }
