@@ -109,11 +109,7 @@ function videosTab(videos, query) {
     : sort === 'oldest' ? (a, b) => new Date(a.publishedAt || 0) - new Date(b.publishedAt || 0)
     : (a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
 
-  const setSort = (next) => {
-    const url = new URLSearchParams(location.hash.split('?')[1] || '');
-    url.set('sort', next);
-    location.hash = `${location.hash.split('?')[0]}?${url}`;
-  };
+  const setSort = (next) => navigate(currentPath(), { ...query, tab: 'videos', sort: next });
 
   return [
     el('div', { class: 'section-head' },

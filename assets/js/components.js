@@ -559,12 +559,19 @@ export function expandableText(text, { lines = 3, onSeek = null } = {}) {
   }
   const toggle = el('button', {
     class: 'expandable-toggle',
+    hidden: true,
     onclick: () => {
       const clamped = wrap.classList.toggle('is-clamped');
       toggle.textContent = clamped ? 'Show more' : 'Show less';
     },
   }, 'Show more');
   wrap.append(content, toggle);
+
+  // Only offer "Show more" when there is more. Measured after layout, since
+  // the node isn't in the document yet.
+  requestAnimationFrame(() => {
+    toggle.hidden = content.scrollHeight <= content.clientHeight + 2;
+  });
   return wrap;
 }
 
