@@ -260,12 +260,75 @@ function wireSearch() {
   });
 }
 
-/* ---------- profile & sync badge ---------- */
+/* ---------- account button & sync badge ---------- */
 
-function paintProfile() {
-  const btn = $('#profile-btn');
-  btn.replaceChildren(avatar(store.user, 32));
-  btn.title = `${store.user.name} — settings`;
+function paintAccount() {
+  const host = $('#account-slot');
+
+  if (!isSignedIn() && auth.features.auth) {
+    setChildren(host, el('button', {
+      class: 'btn btn-primary signin-btn',
+      onclick: () => promptSignIn(),
+    }, svgIcon('subs', 18), el('span', {}, 'Sign in')));
+    return;
+  }
+
+  const who = auth.user || store.user;
+  const btn = el('button', {
+    class: 'profile-btn',
+    id: 'profile-btn',
+    'aria-label': isSignedIn() ? `${who.name} — account menu` : 'Settings',
+    'aria-haspopup': 'menu',
+    title: isSignedIn() ? who.name : 'Settings',
+    onclick: (e) => { e.stopPropagation(); openAccountMenu(btn); },
+  }, avatar(who, 32));
+
+  setChildren(host, btn);
+}
+
+function openAccountMenu(anchor) {
+  closeAnyMenu();
+
+  const who = auth.user || store.user;
+  const items = [
+    ...(isSignedIn()
+      ? [{ label: 'Signed in as ' + who.email, icon: 'subs', disabled: true }]
+      : []),
+    { label: 'Settings', icon: 'settings', action: () => navigate('/settings') },
+    { label: 'Your playlists', icon: 'library', action: () => navigate('/playlists') },
+    { label: 'History', icon: 'history', action: () => navigate('/history') },
+    ...(isAdmin() ? [{ label: 'Studio', icon: 'studio', action: () => navigate('/studio') }] : []),
+    ...(isSignedIn()
+      ? [{
+          label: 'Sign out',
+          icon: 'back',
+          action: async () => {
+            await signOut();
+            toast('Signed out — your data stays on this device');
+          },
+        }]
+      : auth.features.auth
+        ? [{ label: 'Sign in', icon: 'subs', action: () => promptSignIn() }]
+        : []),
+  ];
+
+  const menu = el('div', { class: 'popmenu', role: 'menu' },
+    ...items.map((item) => el('button', {
+      class: `popmenu-item${item.disabled ? ' is-static' : ''}`,
+      role: 'menuitem',
+      disabled: item.disabled || null,
+      onclick: (e) => { e.stopPropagation(); closeAnyMenu(); item.action?.(); },
+    }, svgIcon(item.icon, 20), el('span', {}, item.label))));
+
+  document.body.append(menu);
+
+  const rect = anchor.getBoundingClientRect();
+  const box = menu.getBoundingClientRect();
+  menu.style.left = `${Math.max(8, Math.min(rect.right - box.width, window.innerWidth - box.width - 8))}px`;
+  menu.style.top = `${rect.bottom + 6}px`;
+
+  menu.addEventListener('click', (e) => e.stopPropagation());
+  registerOpenMenu(menu);
 }
 
 function paintSync(status) {
