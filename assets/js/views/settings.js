@@ -1,25 +1,22 @@
-// Settings: profile, appearance, playback, GitHub sync, data management.
+// Settings: account, appearance, playback, shortcuts, data.
 
-import { el, lsGet } from '../util.js';
-import { LS, REPO } from '../config.js';
-import { setToken, verifyToken, rateLimit, hasToken } from '../github.js';
+import { el } from '../util.js';
+import { LS } from '../config.js';
+import { auth, isSignedIn, promptSignIn, signOut, authEvents } from '../auth.js';
 import { store, setSetting, setProfile, clearHistory, loadCatalog } from '../store.js';
 import * as sync from '../sync.js';
-import {
-  button, toast, confirmDialog, svgIcon, avatar, sectionTitle,
-} from '../components.js';
+import { button, toast, confirmDialog, svgIcon, avatar, sectionTitle } from '../components.js';
 import { navigate } from '../router.js';
 import { setView, applyTheme } from '../app.js';
 
 export default function settingsView() {
   setView([
     el('div', { class: 'page-head' },
-      el('h1', { class: 'page-title' }, 'Settings'),
-      el('p', { class: 'page-sub' }, 'Everything here is stored on this device unless sync is on.')),
+      el('h1', { class: 'page-title' }, 'Settings')),
+    accountPanel(),
     profilePanel(),
     appearancePanel(),
     playbackPanel(),
-    syncPanel(),
     shortcutsPanel(),
     dataPanel(),
   ], { title: 'Settings' });
@@ -31,7 +28,7 @@ function panel(title, sub, ...children) {
   return el('section', { class: 'panel' },
     el('h2', { class: 'panel-title' }, title),
     sub ? el('p', { class: 'panel-sub' }, sub) : null,
-    ...children);
+    ...children.filter(Boolean));
 }
 
 function toggleRow(label, hint, checked, onChange) {
@@ -47,31 +44,101 @@ function toggleRow(label, hint, checked, onChange) {
       el('span', { class: 'switch-track' })));
 }
 
+/* ---------- account ---------- */
+
+function accountPanel() {
+  if (!auth.features.auth) {
+    return panel('Account',
+      'Accounts aren’t set up on this deployment, so everything stays on this device.',
+      el('div', { class: 'banner' },
+        svgIcon('settings', 20),
+        el('div', {},
+          el('div', { class: 'banner-title' }, 'Running without a backend'),
+          el('div', { class: 'muted' },
+            'Set AUTH_SECRET and GITHUB_TOKEN in the environment to enable sign-in and cross-device sync. '
+            + 'See the README for the full list.'))));
+  }
+
+  if (!isSignedIn()) {
+    return panel('Account',
+      'Sign in to carry your subscriptions, history and playlists between devices.',
+      el('div', { class: 'form-actions', style: { justifyContent: 'flex-start' } },
+        button('Sign in', {
+          variant: 'primary',
+          onClick: () => promptSignIn().then((user) => { if (user) rerender(); }),
+        }),
+        button('Create an account', {
+          variant: 'subtle',
+          onClick: () => promptSignIn({ mode: 'signup' }).then((user) => { if (user) rerender(); }),
+        })));
+  }
+
+  const syncLabel = {
+    off: 'Not syncing', idle: 'Up to date', pending: 'Changes queued',
+    saving: 'Syncing…', saved: 'Up to date', error: `Sync problem — ${sync.status.error || 'retrying'}`,
+  }[sync.status.state] || '';
+
+  return panel('Account', null,
+    el('div', { class: 'account-row' },
+      avatar({ name: auth.user.name, avatar: auth.user.avatar }, 56),
+      el('div', { style: { flex: '1', minWidth: '0' } },
+        el('div', { style: { fontWeight: '600' } }, auth.user.name),
+        el('div', { class: 'muted', style: { fontSize: '.85rem' } }, auth.user.email),
+        el('div', { class: 'form-hint' },
+          [auth.user.provider === 'google' ? 'Signed in with Google' : 'Signed in with email',
+           auth.user.isAdmin ? 'Administrator' : null,
+           syncLabel].filter(Boolean).join(' · '))),
+      button('Sign out', {
+        variant: 'subtle',
+        onClick: async () => {
+          await signOut();
+          toast('Signed out — your data stays on this device');
+          rerender();
+        },
+      })),
+
+    auth.user.isAdmin
+      ? el('div', { class: 'form-actions', style: { justifyContent: 'flex-start' } },
+          button('Open Studio', { variant: 'ghost', icon: 'studio', onClick: () => navigate('/studio') }))
+      : null,
+
+    toggleRow('Sync across devices',
+      'Keeps subscriptions, history and playlists on your account.',
+      store.settings.sync !== false,
+      (on) => {
+        setSetting('sync', on);
+        if (on) sync.schedule('user');
+        toast(on ? 'Sync on' : 'Sync off — changes stay on this device');
+        rerender();
+      }));
+}
+
 /* ---------- profile ---------- */
 
 function profilePanel() {
   const name = el('input', { class: 'input', maxlength: '40', placeholder: 'Your display name' });
-  name.value = store.user.name === 'Guest' ? '' : store.user.name;
+  name.value = (isSignedIn() ? auth.user.name : store.user.name) === 'Guest'
+    ? '' : (isSignedIn() ? auth.user.name : store.user.name);
+
   const avatarUrl = el('input', { class: 'input', placeholder: 'https://…/you.jpg (optional)' });
-  avatarUrl.value = store.user.avatar || '';
+  avatarUrl.value = store.user.avatar || auth.user?.avatar || '';
 
-  const preview = el('div', { style: { display: 'flex', alignItems: 'center', gap: '.75rem', marginBottom: '1rem' } },
-    avatar(store.user, 56),
-    el('div', {},
-      el('div', { style: { fontWeight: '600' } }, store.user.name),
-      el('div', { class: 'form-hint' }, `Profile id ${store.user.id}`)));
-
-  return panel('Profile', 'Used on comments and the account button.',
-    preview,
+  return panel('Display name', 'Shown on your comments.',
     el('div', { class: 'form-grid' },
-      el('div', { class: 'form-row' }, el('label', { class: 'form-label' }, 'Display name'), name),
+      el('div', { class: 'form-row' }, el('label', { class: 'form-label' }, 'Name'), name),
       el('div', { class: 'form-row' }, el('label', { class: 'form-label' }, 'Avatar URL'), avatarUrl)),
     el('div', { class: 'form-actions' },
-      button('Save profile', {
+      button('Save', {
         variant: 'primary',
         onClick: () => {
           setProfile({ name: name.value.trim() || 'Guest', avatar: avatarUrl.value.trim() || null });
-          toast('Profile saved');
+          if (isSignedIn()) {
+            auth.user.name = store.user.name;
+            auth.user.avatar = store.user.avatar;
+            authEvents.emit('change', auth.user);
+            sync.schedule('user');
+          }
+          toast('Saved');
           rerender();
         },
       })));
@@ -85,11 +152,7 @@ function appearancePanel() {
     el('div', { class: 'chipbar', style: { position: 'static', paddingBottom: 0 } },
       ...options.map(([value, label]) => el('button', {
         class: `chip${store.settings.theme === value ? ' is-active' : ''}`,
-        onclick: () => {
-          setSetting('theme', value);
-          applyTheme();
-          rerender();
-        },
+        onclick: () => { setSetting('theme', value); applyTheme(); rerender(); },
       }, label))));
 }
 
@@ -116,96 +179,6 @@ function playbackPanel() {
         oninput: (e) => setSetting('volume', Number(e.target.value)),
         onchange: rerender,
       })));
-}
-
-/* ---------- GitHub sync ---------- */
-
-function syncPanel() {
-  const tokenInput = el('input', {
-    class: 'input', type: 'password', placeholder: 'github_pat_… or ghp_…',
-    autocomplete: 'off', spellcheck: 'false',
-  });
-  const statusLine = el('div', { class: 'form-hint', style: { marginTop: '.5rem' } });
-  const stored = lsGet(LS.token, '');
-  const bakedIn = Boolean(REPO.token);
-
-  if (stored) {
-    statusLine.textContent = `A token is saved on this device (…${String(stored).slice(-4)}).`;
-  } else if (bakedIn) {
-    statusLine.textContent = 'Using the token shipped in config.js.';
-  } else {
-    statusLine.textContent = 'No token — the site is read-only and your data stays on this device.';
-  }
-
-  const check = async () => {
-    statusLine.textContent = 'Checking…';
-    const result = await verifyToken();
-    if (!result.ok) { statusLine.textContent = `✕ ${result.reason}`; return; }
-    const limit = await rateLimit();
-    statusLine.textContent = `✓ Write access to ${result.repo}`
-      + (limit ? ` · ${limit.remaining}/${limit.limit} API calls left this hour` : '');
-  };
-
-  return panel('GitHub sync',
-    'A token lets this device publish catalog edits and back up your history, subscriptions and playlists to the repo.',
-
-    bakedIn
-      ? el('div', { class: 'banner banner-danger' },
-          svgIcon('settings', 20),
-          el('div', {},
-            el('div', { class: 'banner-title' }, 'A token is hard-coded in config.js'),
-            el('div', {}, 'It ships to every visitor of this site and can be read straight out of the page source. '
-              + 'Remove it before making the repo or the site public, and let people paste their own instead.')))
-      : null,
-
-    el('div', { class: 'form-grid' },
-      el('div', { class: 'form-row' },
-        el('label', { class: 'form-label' }, 'Personal access token'),
-        tokenInput,
-        el('div', { class: 'form-hint' },
-          'Fine-grained token scoped to this repo with Contents: Read and write. Stored in this browser only.')),
-      statusLine),
-
-    el('div', { class: 'form-actions' },
-      hasToken()
-        ? button('Sign out', {
-            variant: 'ghost',
-            onClick: () => {
-              setToken('');
-              toast('Token removed from this device');
-              rerender();
-            },
-          })
-        : null,
-      hasToken() ? button('Test access', { variant: 'subtle', onClick: check }) : null,
-      button('Save token', {
-        variant: 'primary',
-        onClick: async () => {
-          const value = tokenInput.value.trim();
-          if (!value) { tokenInput.focus(); return; }
-          setToken(value);
-          const result = await verifyToken(value);
-          if (!result.ok) {
-            statusLine.textContent = `✕ ${result.reason}`;
-            toast(result.reason, { duration: 6000 });
-            return;
-          }
-          tokenInput.value = '';
-          toast(`Connected to ${result.repo}`);
-          await sync.pullUser();
-          await loadCatalog({ fresh: true });
-          rerender();
-        },
-      })),
-
-    el('div', { style: { marginTop: '1rem' } },
-      toggleRow('Back up my data to the repo',
-        'Writes subscriptions, history and playlists to data/users/ when a token is set.',
-        store.settings.sync, (on) => {
-          setSetting('sync', on);
-          if (on) sync.schedule('user');
-          toast(on ? 'Sync on' : 'Sync off — data stays on this device');
-        })));
 }
 
 /* ---------- shortcuts ---------- */
@@ -262,7 +235,8 @@ function dataPanel() {
         variant: 'subtle',
         onClick: async () => {
           const ok = await confirmDialog('Clear watch history?',
-            'Removes every entry and all resume positions on this device.',
+            'Removes every entry and all resume positions.'
+            + (isSignedIn() ? ' This syncs to your account.' : ''),
             { confirmLabel: 'Clear history' });
           if (!ok) return;
           clearHistory();
@@ -270,13 +244,15 @@ function dataPanel() {
           rerender();
         },
       }),
-      button('Reset everything', {
+      button('Reset this device', {
         variant: 'danger', icon: 'trash',
         onClick: async () => {
           const ok = await confirmDialog('Reset this device?',
-            'Deletes your profile, subscriptions, history, playlists, saved token and cached catalog from this browser. '
-            + 'Anything already synced to the repo stays there.',
-            { confirmLabel: 'Reset everything' });
+            'Clears the local copy of your profile, history, playlists and cached catalog. '
+            + (isSignedIn()
+              ? 'Your account keeps its synced copy — signing in again restores it.'
+              : 'Nothing is synced, so this cannot be undone.'),
+            { confirmLabel: 'Reset' });
           if (!ok) return;
           for (const key of Object.values(LS)) {
             if (typeof key === 'string') localStorage.removeItem(key);
@@ -285,19 +261,19 @@ function dataPanel() {
           location.reload();
         },
       })),
+
     el('div', { style: { marginTop: '1.5rem' } },
       sectionTitle('Catalog'),
       el('p', { class: 'form-hint' },
         `${store.catalog.videos.length} videos · ${store.catalog.channels.length} channels · `
         + `${store.catalog.series.length} series · ${store.catalog.playlists.length} playlists`),
       el('div', { class: 'form-actions', style: { justifyContent: 'flex-start' } },
-        button('Refresh from GitHub', {
+        button('Refresh catalog', {
           variant: 'subtle',
           onClick: async () => {
             await loadCatalog({ fresh: true });
             toast('Catalog refreshed');
             rerender();
           },
-        }),
-        button('Open Studio', { variant: 'ghost', onClick: () => navigate('/studio') }))));
+        }))));
 }
