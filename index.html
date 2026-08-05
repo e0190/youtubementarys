@@ -1,1 +1,86 @@
-<h1>Main Page</h1>
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>YoutubeMentries — Documentaries &amp; Docuseries</title>
+<meta name="description" content="A streaming home for documentaries and docuseries. Browse channels, follow series, pick up where you left off.">
+<meta name="theme-color" content="#0f0f0f">
+<meta property="og:title" content="YoutubeMentries">
+<meta property="og:description" content="Documentaries and docuseries, all in one place.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://i.ytimg.com">
+<link rel="preconnect" href="https://www.youtube.com">
+<link rel="stylesheet" href="assets/css/app.css">
+<script>
+  // Apply the saved theme before first paint so there's no light/dark flash.
+  try {
+    var s = JSON.parse(localStorage.getItem('ym.settings') || '{}');
+    var t = s.theme || 'dark';
+    if (t === 'system') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<a class="skip-link" href="#view">Skip to content</a>
+
+<header class="topbar" id="topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" id="menu-toggle" aria-label="Menu" aria-expanded="false" aria-controls="sidebar">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+    </button>
+    <a class="brand" href="#/" aria-label="YoutubeMentries home">
+      <svg class="brand-mark" viewBox="0 0 36 26" width="32" height="24" aria-hidden="true">
+        <rect x="0" y="0" width="36" height="26" rx="7" fill="var(--brand)"/>
+        <path d="M14.5 7.5v11l9.5-5.5-9.5-5.5z" fill="#fff"/>
+      </svg>
+      <span class="brand-text">Youtube<span class="brand-accent">Mentries</span></span>
+    </a>
+  </div>
+
+  <form class="topbar-search" id="search-form" role="search">
+    <div class="search-field">
+      <input id="search-input" type="search" name="q" placeholder="Search documentaries, series, channels"
+             autocomplete="off" aria-label="Search" aria-expanded="false" aria-autocomplete="list"
+             aria-controls="search-suggest">
+      <button class="search-clear" type="button" id="search-clear" aria-label="Clear search" hidden>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+      <ul class="search-suggest" id="search-suggest" role="listbox" hidden></ul>
+    </div>
+    <button class="search-submit" type="submit" aria-label="Search">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M20.9 19.5l-4.6-4.6a7.5 7.5 0 1 0-1.4 1.4l4.6 4.6 1.4-1.4zM10.5 16a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/></svg>
+    </button>
+  </form>
+
+  <div class="topbar-right">
+    <button class="icon-btn mobile-search-btn" id="mobile-search" aria-label="Search">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M20.9 19.5l-4.6-4.6a7.5 7.5 0 1 0-1.4 1.4l4.6 4.6 1.4-1.4zM10.5 16a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/></svg>
+    </button>
+    <a class="icon-btn studio-link" href="#/studio" aria-label="Studio" title="Studio">
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+    </a>
+    <span class="sync-pill" id="sync-pill" hidden></span>
+    <a class="profile-btn" href="#/settings" id="profile-btn" aria-label="Settings and profile"></a>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="Main"></nav>
+  <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
+  <main class="view" id="view" tabindex="-1"></main>
+</div>
+
+<div class="miniplayer" id="miniplayer" hidden></div>
+
+<noscript>
+  <p style="padding:2rem;text-align:center">YoutubeMentries needs JavaScript to browse and play videos.</p>
+</noscript>
+
+<script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
