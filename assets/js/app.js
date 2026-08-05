@@ -22,15 +22,25 @@ import studioView from './views/studio.js';
 import settingsView from './views/settings.js';
 
 const viewHost = $('#view');
-let cleanupCurrentView = null;
+let viewTeardowns = [];
 
-/** Views call this to hand back a teardown function (player disposal, timers). */
-export function onViewTeardown(fn) { cleanupCurrentView = fn; }
+/**
+ * Views register teardown work here (player disposal, timers, intervals).
+ * Everything registered is run — and cleared — just before the next route's
+ * handler builds anything, so a view can register more than once.
+ */
+export function onViewTeardown(fn) { viewTeardowns.push(fn); }
+
+function runViewTeardowns() {
+  const fns = viewTeardowns;
+  viewTeardowns = [];
+  for (const fn of fns) {
+    try { fn(); } catch (err) { console.error('[teardown]', err); }
+  }
+}
 
 /** Swap the main content area. `content` is a node or array of nodes. */
 export function setView(content, { title } = {}) {
-  cleanupCurrentView?.();
-  cleanupCurrentView = null;
   viewHost.replaceChildren(...(Array.isArray(content) ? content.flat(Infinity).filter(Boolean) : [content]));
   document.title = title ? `${title} — ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
 }
@@ -326,6 +336,7 @@ async function boot() {
   events.on('settings', applyTheme);
   events.on('sync', paintSync);
   events.on('catalog', buildSidebar);
+  routerEvents.on('before', runViewTeardowns);
   routerEvents.on('after', () => { highlightNav(); closeMiniplayerIfWatching(); });
 
   sync.start();
