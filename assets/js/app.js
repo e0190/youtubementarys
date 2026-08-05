@@ -1,7 +1,7 @@
 // Bootstrap: theme, chrome (topbar + sidebar), routes, sync, service worker.
 
 import { SITE, TOPICS } from './config.js';
-import { $, el, debounce } from './util.js';
+import { $, el, debounce, setChildren } from './util.js';
 import {
   store, events, loadLocal, loadCatalog, searchVideos, searchChannels, searchSeries,
   getChannel,
@@ -76,7 +76,7 @@ function buildSidebar() {
   const nav = $('#sidebar');
   const subs = store.user.subscriptions.map(getChannel).filter(Boolean);
 
-  nav.replaceChildren(
+  setChildren(nav,
     el('div', { class: 'nav-group' },
       navLink('/', 'Home', 'home', { exact: true }),
       navLink('/explore', 'Explore', 'compass'),
