@@ -4,14 +4,14 @@ import { el, compact, timeAgo, longDate, timecode, throttle } from '../util.js';
 import { PATHS } from '../config.js';
 import { readJSON, updateJSON, hasToken } from '../github.js';
 import {
-  store, events, getVideo, getChannel, getSeries, getPlaylist, playlistVideos,
+  store, getVideo, getChannel, getSeries, getPlaylist, playlistVideos,
   relatedTo, nextEpisode, videosOfSeries, seasonsOf, viewsOf, likesOf, ratingOf,
   rateVideo, resumePosition, recordProgress, markViewed, inWatchLater,
   toggleWatchLater, userPlaylist, setSetting,
 } from '../store.js';
 import {
   videoCard, avatar, subscribeButton, svgIcon, iconButton, button, toast,
-  emptyState, expandableText, openPlaylistPicker, thumbFor as _thumbFor,
+  emptyState, expandableText, openPlaylistPicker,
 } from '../components.js';
 import { createPlayer } from '../player.js';
 import { openMiniplayer, handoffPosition, closeMiniplayer } from '../miniplayer.js';
@@ -479,5 +479,3 @@ function buildComments(video) {
 
   return section;
 }
-
-export { events };
