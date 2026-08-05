@@ -349,7 +349,7 @@ function channelsPanel() {
     el('td', {}, (c.topics || []).join(', ') || '—'),
     el('td', {}, el('div', { class: 'row-actions' },
       iconButton('settings', 'Edit', () => openChannelForm(c), { size: 18 }),
-      iconButton('trash', 'Delete', () => removeChannel(c), { size: 18 }))));
+      iconButton('trash', 'Delete', () => removeChannel(c), { size: 18 })))));
 
   return el('div', {},
     el('div', { class: 'section-head', style: { marginTop: '0' } },
@@ -583,7 +583,7 @@ function playlistsPanel() {
     el('td', {}, String((p.videoIds || []).length)),
     el('td', {}, el('div', { class: 'row-actions' },
       iconButton('settings', 'Edit', () => openCuratedPlaylistForm(p), { size: 18 }),
-      iconButton('trash', 'Delete', () => removeCuratedPlaylist(p), { size: 18 }))));
+      iconButton('trash', 'Delete', () => removeCuratedPlaylist(p), { size: 18 })))));
 
   return el('div', {},
     el('div', { class: 'section-head', style: { marginTop: '0' } },
