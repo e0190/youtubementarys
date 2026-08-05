@@ -59,7 +59,7 @@ export default function channelView({ params, query = {} }) {
 
   const panels = {
     home: () => homeTab(channel, videos, series, playlists),
-    videos: () => videosTab(videos, query),
+    videos: () => videosTab(videos, query, params.handle),
     series: () => (series.length
       ? el('div', { class: 'series-grid' }, ...series.map(seriesCard))
       : emptyState('film', 'No series yet', `${channel.name} hasn’t published a docuseries.`)),
@@ -100,7 +100,7 @@ function homeTab(channel, videos, series, playlists) {
   return nodes;
 }
 
-function videosTab(videos, query) {
+function videosTab(videos, query, handle) {
   if (!videos.length) return emptyState('film', 'No videos yet', 'Nothing has been published here.');
 
   const sort = query.sort || 'newest';
@@ -109,7 +109,7 @@ function videosTab(videos, query) {
     : sort === 'oldest' ? (a, b) => new Date(a.publishedAt || 0) - new Date(b.publishedAt || 0)
     : (a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
 
-  const setSort = (next) => navigate(currentPath(), { ...query, tab: 'videos', sort: next });
+  const setSort = (next) => navigate(`/channel/${handle}`, { tab: 'videos', sort: next });
 
   return [
     el('div', { class: 'section-head' },
