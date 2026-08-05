@@ -2,6 +2,7 @@
 
 import {
   el, esc, compact, timecode, timeAgo, durationWords, hueFrom, initials, clamp,
+  setChildren,
 } from './util.js';
 import { href } from './router.js';
 import {
@@ -271,7 +272,7 @@ export function openPlaylistPicker(video) {
   const listWrap = el('div', { class: 'picker-list' });
 
   const paint = () => {
-    listWrap.replaceChildren(
+    setChildren(listWrap,
       ...store.user.playlists.map((pl) => el('label', { class: 'picker-row' },
         el('input', {
           type: 'checkbox',
@@ -317,9 +318,10 @@ export function subscribeButton(channelId, { size = 'md' } = {}) {
   const render = () => {
     const on = isSubscribed(channelId);
     btn.className = `btn btn-${on ? 'subtle' : 'primary'} subscribe-btn size-${size}`;
-    btn.replaceChildren(
+    setChildren(btn,
       on ? svgIcon('bell', 18) : null,
       el('span', {}, on ? 'Subscribed' : 'Subscribe'));
+    btn.setAttribute('aria-label', on ? 'Subscribed — click to unsubscribe' : 'Subscribe');
     btn.setAttribute('aria-pressed', String(on));
   };
   const btn = el('button', {
