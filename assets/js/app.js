@@ -394,32 +394,51 @@ function registerServiceWorker() {
 async function boot() {
   loadLocal();
   applyTheme();
-  paintProfile();
+  paintAccount();
   buildSidebar();
   wireNav();
   wireSearch();
   registerRoutes();
 
-  events.on('user', () => { paintProfile(); buildSidebar(); });
+  events.on('user', () => { paintAccount(); buildSidebar(); });
   events.on('settings', applyTheme);
   events.on('sync', paintSync);
   events.on('catalog', buildSidebar);
-  routerEvents.on('before', runViewTeardowns);
+  authEvents.on('change', () => { paintAccount(); buildSidebar(); });
+  routerEvents.on('before', () => { runViewTeardowns(); closeAnyMenu(); });
   routerEvents.on('after', highlightNav);
 
   sync.start();
   startRouter();
 
-  // The catalog arrives after first paint; views that rendered a skeleton get a
-  // second pass once the data is in.
-  try {
-    await loadCatalog();
-    if (store.loadError) toast(store.loadError, { duration: 6000 });
-    resolve();
-  } catch (err) {
-    console.error('[boot] catalog load failed:', err);
+  // Session, catalog and OAuth outcome all resolve after first paint. The app
+  // is fully usable signed out, so none of this blocks rendering.
+  const redirect = consumeAuthRedirect();
+
+  const [, catalogResult] = await Promise.allSettled([
+    loadSession(),
+    loadCatalog(),
+  ]);
+
+  if (catalogResult.status === 'rejected') {
+    console.error('[boot] catalog load failed:', catalogResult.reason);
     toast('Could not load the catalog.', { duration: 6000 });
+  } else if (store.loadError) {
+    toast(store.loadError, { duration: 6000 });
   }
+
+  if (redirect === 'cancelled') toast('Sign-in cancelled');
+
+  if (isSignedIn()) {
+    // Coming back from Google lands here with local guest data possibly newer
+    // than the account's copy; sync sorts out which side wins.
+    await sync.pull({ preferLocal: store.user.history.length > 0 });
+    toast(`Signed in as ${auth.user.name}`);
+  }
+
+  paintAccount();
+  buildSidebar();
+  resolve();
 
   registerServiceWorker();
 }
