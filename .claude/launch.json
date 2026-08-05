@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "youtubementries",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "serve", "--listen", "4321", "--no-clipboard", "."],
-      "port": 4321
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8422"],
+      "port": 8422
     }
   ]
 }
