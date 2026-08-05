@@ -137,16 +137,20 @@ export default function watchView({ query = {} }) {
   const teardown = () => {
     clearInterval(saveTimer);
     saveProgress();
-    // If the viewer sent it to the miniplayer, that instance owns playback now.
-    if (!handedOff) {
-      const stillPlaying = player.isPlaying();
-      const at = Math.floor(player.getTime());
-      player.destroy();
-      if (stillPlaying && store.settings.autoplay) {
-        openMiniplayer(video, { startAt: at, playing: true });
-      }
-    } else {
-      player.destroy();
+
+    // If the viewer sent it to the miniplayer explicitly, that instance already
+    // owns playback and this one just goes away.
+    if (handedOff) { player.destroy(); return; }
+
+    const stillPlaying = player.isPlaying();
+    const at = Math.floor(player.getTime());
+    player.destroy();
+
+    // Navigating to another video replaces playback outright — only hand off to
+    // the miniplayer when heading somewhere that isn't a watch page.
+    const goingToWatch = location.hash.replace(/^#/, '').split('?')[0].replace(/\/+$/, '') === '/watch';
+    if (stillPlaying && !goingToWatch && store.settings.autoplay) {
+      openMiniplayer(video, { startAt: at, playing: true });
     }
   };
   onViewTeardown(teardown);

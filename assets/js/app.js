@@ -337,7 +337,7 @@ async function boot() {
   events.on('sync', paintSync);
   events.on('catalog', buildSidebar);
   routerEvents.on('before', runViewTeardowns);
-  routerEvents.on('after', () => { highlightNav(); closeMiniplayerIfWatching(); });
+  routerEvents.on('after', highlightNav);
 
   sync.start();
   startRouter();
@@ -354,12 +354,6 @@ async function boot() {
   }
 
   registerServiceWorker();
-}
-
-/** Watching a video full-size should dismiss the floating miniplayer. */
-function closeMiniplayerIfWatching() {
-  const { path, query } = parseHash();
-  if (path === '/watch') closeMiniplayer(query.v);
 }
 
 boot();
