@@ -9,7 +9,7 @@
 // Bump CACHE_VERSION whenever the shell files change, or clients will keep
 // serving the old bundle.
 
-const CACHE_VERSION = 'ym-v1';
+const CACHE_VERSION = 'ym-v2';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -22,7 +22,8 @@ const SHELL = [
   './assets/js/app.js',
   './assets/js/config.js',
   './assets/js/util.js',
-  './assets/js/github.js',
+  './assets/js/api.js',
+  './assets/js/auth.js',
   './assets/js/store.js',
   './assets/js/sync.js',
   './assets/js/router.js',
@@ -72,6 +73,10 @@ self.addEventListener('fetch', (event) => {
 
   // Range requests (video seeking) must go straight to the network.
   if (request.headers.has('range')) return;
+
+  // API responses are per-session and must never be cached or replayed — a
+  // cached /api/auth/session would show the previous person's account.
+  if (url.pathname.startsWith('/api/')) return;
 
   if (url.pathname.includes('/data/') && url.pathname.endsWith('.json')) {
     event.respondWith(networkFirst(request));
