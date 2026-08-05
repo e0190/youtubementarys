@@ -324,9 +324,40 @@ export function nextEpisode(video) {
 /* ---------- viewer data ---------- */
 
 function persistUser() {
+  store.user.updatedAt = new Date().toISOString();
   lsSet(LS.user, store.user);
   events.emit('user');
   events.emit('dirty', 'user');
+}
+
+/** Replace the local viewer record (used when the repo copy is newer). */
+export function adoptUser(remote) {
+  if (!remote?.id) return;
+  store.user = { ...blankUser(), ...remote };
+  lsSet(LS.user, store.user);
+  events.emit('user');
+}
+
+function bumpStat(kind, videoId, delta) {
+  store.stats[kind][videoId] = (store.stats[kind][videoId] || 0) + delta;
+  store.pendingStats[kind][videoId] = (store.pendingStats[kind][videoId] || 0) + delta;
+  events.emit('dirty', 'stats');
+}
+
+/** Fold this device's pending deltas into a stats document read from the repo. */
+export function mergePendingStats(remote) {
+  const out = { views: {}, likes: {}, ...(remote || {}) };
+  for (const kind of ['views', 'likes']) {
+    out[kind] = { ...out[kind] };
+    for (const [id, delta] of Object.entries(store.pendingStats[kind])) {
+      out[kind][id] = (out[kind][id] || 0) + delta;
+    }
+  }
+  return out;
+}
+
+export function clearPendingStats() {
+  store.pendingStats = { views: {}, likes: {} };
 }
 
 export function persistSettings() {
@@ -367,10 +398,7 @@ export function rateVideo(videoId, rating) {
 
   // Keep the displayed aggregate honest about this viewer's own vote.
   const delta = (next === 1 ? 1 : 0) - (current === 1 ? 1 : 0);
-  if (delta) {
-    store.stats.likes[videoId] = (store.stats.likes[videoId] || 0) + delta;
-    events.emit('dirty', 'stats');
-  }
+  if (delta) bumpStat('likes', videoId, delta);
   persistUser();
   return next;
 }
@@ -423,8 +451,7 @@ export function recordProgress(videoId, position, duration) {
 }
 
 export function markViewed(videoId) {
-  store.stats.views[videoId] = (store.stats.views[videoId] || 0) + 1;
-  events.emit('dirty', 'stats');
+  bumpStat('views', videoId, 1);
 }
 
 export function removeFromHistory(videoId) {
