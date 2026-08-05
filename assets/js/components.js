@@ -334,7 +334,14 @@ export function subscribeButton(channelId, { size = 'md' } = {}) {
     },
   });
   render();
-  events.on('user', render);
+
+  // These buttons are created on every card render, so a plain subscription
+  // here leaks one listener per card for the life of the session. Drop it the
+  // first time the button is found detached from the document.
+  const off = events.on('user', () => {
+    if (!btn.isConnected) { off(); return; }
+    render();
+  });
   return btn;
 }
 
