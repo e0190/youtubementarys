@@ -1,18 +1,20 @@
-// Background sync of viewer data to the repo.
+// Background sync of viewer data.
 //
-// The UI never awaits this. Mutations are already in localStorage by the time
-// sync runs; this just mirrors them to data/users/<id>.json and folds view/like
-// counters into data/stats.json. If there's no token, or sync is switched off,
-// every function here is a no-op and the app stays purely local.
+// Signed out, this is entirely inert and everything lives in localStorage.
+// Signed in, local changes are mirrored to the server on a debounce, and the
+// server copy is pulled once at sign-in.
+//
+// The UI never awaits any of this — mutations are already in localStorage by
+// the time sync runs.
 
-import { PATHS } from './config.js';
-import { hasToken, writeJSON, updateJSON, readJSON } from './github.js';
+import { api } from './api.js';
+import { auth, authEvents, isSignedIn } from './auth.js';
 import { store, events, adoptUser, clearPendingStats } from './store.js';
 
-const DEBOUNCE_MS = 6000;
+const DEBOUNCE_MS = 4000;
 
 export const status = {
-  state: 'idle',   // 'idle' | 'pending' | 'saving' | 'saved' | 'error' | 'off'
+  state: 'off',   // 'off' | 'idle' | 'pending' | 'saving' | 'saved' | 'error'
   lastSyncedAt: null,
   error: null,
 };
@@ -21,7 +23,7 @@ const dirty = new Set();
 let timer = null;
 let inFlight = null;
 
-const enabled = () => Boolean(store.settings.sync && hasToken());
+const enabled = () => isSignedIn() && store.settings.sync !== false;
 
 function setState(state, error = null) {
   status.state = state;
@@ -29,44 +31,55 @@ function setState(state, error = null) {
   events.emit('sync', status);
 }
 
-/** Pull the repo copy of the viewer record if it's newer than what's on this device. */
-export async function pullUser() {
+/* ---------- pull ---------- */
+
+/**
+ * Merge the server's copy with whatever is on this device.
+ *
+ * Whichever side was written most recently wins outright. That keeps the rule
+ * predictable — the alternative, field-by-field merging, makes an unsubscribe
+ * on one device silently reappear from another.
+ */
+export async function pull({ preferLocal = false } = {}) {
   if (!enabled()) return false;
   try {
-    const { data } = await readJSON(PATHS.user(store.user.id), { fresh: true });
-    if (!data?.id) return false;
+    const { data } = await api.getMe();
+    if (!data) return false;
+
     const remoteAt = new Date(data.updatedAt || 0).getTime();
     const localAt = new Date(store.user.updatedAt || 0).getTime();
+
+    if (preferLocal && localAt > 0) {
+      // Just signed in on a device that already has local history — keep it and
+      // push, so nothing the person did as a guest is thrown away.
+      schedule('user');
+      return false;
+    }
     if (remoteAt > localAt) {
-      adoptUser(data);
+      adoptUser({ ...data, id: auth.user.id });
       return true;
     }
+    if (localAt > remoteAt) schedule('user');
   } catch (err) {
     console.warn('[sync] pull failed:', err.message);
   }
   return false;
 }
 
+/* ---------- push ---------- */
+
 async function pushUser() {
-  await writeJSON(PATHS.user(store.user.id), store.user, {
-    message: `sync: ${store.user.name} (${store.user.id})`,
-  });
+  const { id, name, avatar, subscriptions, history, ratings, playlists, watchLater } = store.user;
+  await api.putMe({ id, name, avatar, subscriptions, history, ratings, playlists, watchLater });
 }
 
 async function pushStats() {
-  // Take the deltas out of the store up front, so counts recorded while the
-  // request is in flight accumulate cleanly for the next run instead of being
-  // written twice or dropped.
   const pending = takePending();
   if (!pending) return;
-
   try {
-    await updateJSON('data/stats.json', (remote) => applyDeltas(remote, pending), {
-      message: 'sync: view and like counts',
-      fallback: { views: {}, likes: {} },
-    });
+    await api.postStats(pending);
   } catch (err) {
-    returnPending(pending); // retry these on the next flush
+    returnPending(pending);
     throw err;
   }
 }
@@ -87,33 +100,26 @@ function returnPending(pending) {
   }
 }
 
-function applyDeltas(remote, deltas) {
-  const out = { views: {}, likes: {}, ...(remote || {}) };
-  for (const kind of ['views', 'likes']) {
-    out[kind] = { ...out[kind] };
-    for (const [id, delta] of Object.entries(deltas[kind])) {
-      out[kind][id] = Math.max(0, (out[kind][id] || 0) + delta);
-    }
-  }
-  return out;
-}
-
 async function flushNow() {
-  if (!enabled() || dirty.size === 0) return;
-  if (inFlight) return inFlight;
+  if (dirty.size === 0) return;
 
+  // Counters are anonymous, so they still go up for signed-out viewers.
   const jobs = new Set(dirty);
   dirty.clear();
+  if (!isSignedIn()) jobs.delete('user');
+  if (!jobs.size) { setState(isSignedIn() ? 'idle' : 'off'); return; }
+
+  if (inFlight) return inFlight;
   setState('saving');
 
   inFlight = (async () => {
     try {
-      if (jobs.has('user')) await pushUser();
+      if (jobs.has('user') && enabled()) await pushUser();
       if (jobs.has('stats')) await pushStats();
       status.lastSyncedAt = new Date().toISOString();
       setState('saved');
     } catch (err) {
-      for (const job of jobs) dirty.add(job); // retry on the next tick
+      for (const job of jobs) dirty.add(job);
       console.warn('[sync] push failed:', err.message);
       setState('error', err.message);
     } finally {
@@ -124,16 +130,14 @@ async function flushNow() {
   return inFlight;
 }
 
-/** Queue a flush. Called for you via the store's `dirty` event. */
 export function schedule(kind) {
   if (kind) dirty.add(kind);
-  if (!enabled()) { setState('off'); return; }
+  if (!isSignedIn() && !dirty.has('stats')) { setState('off'); return; }
   setState('pending');
   clearTimeout(timer);
   timer = setTimeout(flushNow, DEBOUNCE_MS);
 }
 
-/** Force an immediate write — used when leaving the page. */
 export function flush() {
   clearTimeout(timer);
   return flushNow();
@@ -142,14 +146,21 @@ export function flush() {
 export function start() {
   events.on('dirty', schedule);
 
-  // Best-effort save when the tab is hidden or closed. `visibilitychange` is the
-  // reliable one on mobile; `pagehide` covers desktop tab close.
+  authEvents.on('signin', async () => {
+    setState('idle');
+    await pull({ preferLocal: store.user.history.length > 0 });
+  });
+  authEvents.on('signout', () => {
+    dirty.clear();
+    clearTimeout(timer);
+    setState('off');
+  });
+
   const saveOnExit = () => { if (dirty.size) flush(); };
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') saveOnExit();
   });
   window.addEventListener('pagehide', saveOnExit);
 
-  setState(enabled() ? 'idle' : 'off');
-  if (enabled()) pullUser();
+  setState(isSignedIn() ? 'idle' : 'off');
 }
