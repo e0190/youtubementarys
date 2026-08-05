@@ -1,0 +1,48 @@
+{
+  "channels": [
+    {
+      "id": "ch_gearhouse",
+      "handle": "gearhouse",
+      "name": "Gear House",
+      "tagline": "Short motoring documentaries and road stories.",
+      "description": "Gear House makes short-form documentaries about cars and the people who drive them — buying them badly, fixing them worse, and driving them a very long way.",
+      "avatar": null,
+      "banner": null,
+      "verified": true,
+      "subscribers": 1840000,
+      "joined": "2011-03-14",
+      "topics": ["Travel", "Technology", "Sports"],
+      "links": []
+    },
+    {
+      "id": "ch_openframe",
+      "handle": "openframe",
+      "name": "Open Frame",
+      "tagline": "Open-licence films and the craft behind them.",
+      "description": "Open Frame collects openly licensed films — the Blender Foundation's open movies among them — and the making-of stories around independent animation and effects work.",
+      "avatar": null,
+      "banner": null,
+      "verified": true,
+      "subscribers": 942000,
+      "joined": "2008-06-02",
+      "topics": ["Art", "Technology", "Science"],
+      "links": [
+        { "label": "Blender open movies", "url": "https://studio.blender.org/films/" }
+      ]
+    },
+    {
+      "id": "ch_firstlight",
+      "handle": "firstlight",
+      "name": "First Light",
+      "tagline": "Where the internet started filming itself.",
+      "description": "A small archive channel about the early web — the first uploads, the first formats, and the people who did not know they were making history.",
+      "avatar": null,
+      "banner": null,
+      "verified": false,
+      "subscribers": 128000,
+      "joined": "2015-01-20",
+      "topics": ["History", "Technology", "Archaeology"],
+      "links": []
+    }
+  ]
+}
