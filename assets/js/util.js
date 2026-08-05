@@ -37,6 +37,20 @@ export function render(node, content) {
   return node;
 }
 
+/**
+ * Replace a node's children, dropping conditional blanks.
+ *
+ * Native replaceChildren() stringifies anything that isn't a Node, so passing
+ * `cond ? icon() : null` silently renders the text "null". Use this whenever
+ * any child is conditional.
+ */
+export function setChildren(node, ...children) {
+  node.replaceChildren(...children.flat(Infinity)
+    .filter((c) => c !== null && c !== undefined && c !== false)
+    .map((c) => (c instanceof Node ? c : document.createTextNode(String(c)))));
+  return node;
+}
+
 /* ---------- formatting ---------- */
 
 /** 1832000 -> "1.8M" */
