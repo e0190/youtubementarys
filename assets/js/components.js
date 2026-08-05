@@ -86,8 +86,8 @@ function letterAvatar(name, size) {
   }, initials(name));
 }
 
-/** Thumbnail with a YouTube-resolution fallback and a lazy fade-in. */
-function thumbImage(video, alt = '') {
+/** Thumbnail <img> that falls back to a lower YouTube resolution, then a glyph. */
+export function thumbImage(video, alt = '') {
   const primary = thumbnailFor(video);
   const fallback = thumbnailFallback(video);
   if (!primary) {

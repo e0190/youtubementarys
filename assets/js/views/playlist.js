@@ -3,11 +3,11 @@
 import { el, compact, durationWords } from '../util.js';
 import {
   store, getPlaylist, userPlaylist, playlistVideos, getChannel, viewsOf,
-  updatePlaylist, deletePlaylist, togglePlaylistVideo,
+  updatePlaylist, deletePlaylist,
 } from '../store.js';
 import {
   videoCard, avatar, grid, emptyState, button, toast, confirmDialog, modal,
-  thumbFallbackImage,
+  thumbImage,
 } from '../components.js';
 import { href, navigate } from '../router.js';
 import { setView } from '../app.js';
@@ -65,7 +65,7 @@ export default function playlistView({ params }) {
 
   const header = el('section', { class: 'series-hero' },
     videos[0]
-      ? el('div', { class: 'series-hero-bg' }, thumbFallbackImage(videos[0]))
+      ? el('div', { class: 'series-hero-bg' }, thumbImage(videos[0]))
       : null,
     el('div', { class: 'series-hero-body' },
       el('h1', { class: 'series-hero-title' }, playlist.title),
@@ -134,5 +134,3 @@ function openEditor(playlist, rerender) {
     ],
   });
 }
-
-export { togglePlaylistVideo };
