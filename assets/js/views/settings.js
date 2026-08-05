@@ -301,5 +301,3 @@ function dataPanel() {
         }),
         button('Open Studio', { variant: 'ghost', onClick: () => navigate('/studio') }))));
 }
-
-export { getToken };
