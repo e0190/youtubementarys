@@ -597,7 +597,7 @@ export function createPlayer(container, video, opts = {}) {
     else stage.requestFullscreen?.().catch(() => showToast('Full screen was blocked'));
   }
   fullBtn.addEventListener('click', toggleFullscreen);
-  document.addEventListener('fullscreenchange', () => {
+  onDocument(document, 'fullscreenchange', () => {
     const on = isFullscreen();
     stage.classList.toggle('is-fullscreen', on);
     setIcon(fullBtn, on ? ICONS.exitFull : ICONS.full);
