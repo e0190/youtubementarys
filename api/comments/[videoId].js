@@ -4,7 +4,7 @@
 // session rather than the request body.
 
 import { route, json, readJsonBody, query, badRequest, notFound } from '../_lib/http.js';
-import { requireSession, isAdmin, currentSession } from '../_lib/auth.js';
+import { requireSession, isAdmin } from '../_lib/auth.js';
 import { readJSON, updateJSON } from '../_lib/github.js';
 
 const MAX_COMMENTS = 500;
@@ -72,5 +72,3 @@ export default route(async (req, res) => {
 
   json(res, 201, { comment });
 }, { methods: ['GET', 'POST', 'DELETE'] });
-
-export { currentSession };
