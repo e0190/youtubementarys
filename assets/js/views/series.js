@@ -6,8 +6,7 @@ import {
   resumePosition, progressRatio, historyEntry, thumbnailFor, thumbnailFallback,
 } from '../store.js';
 import {
-  avatar, subscribeButton, button, emptyState, svgIcon, tabs, toast,
-  createPlaylistFromSeries as _unused,
+  avatar, subscribeButton, button, emptyState, svgIcon, tabs,
 } from '../components.js';
 import { href, navigate } from '../router.js';
 import { setView } from '../app.js';
@@ -142,5 +141,3 @@ function episodeRow(ep, number, series) {
     el('div', { class: 'row-actions' },
       button('Play', { variant: 'subtle', onClick: () => navigate('/watch', { v: ep.id }) })));
 }
-
-export { toast, series as _s };
