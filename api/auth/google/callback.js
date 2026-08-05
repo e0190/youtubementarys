@@ -6,8 +6,8 @@
 // read without a separate signature check.
 
 import { route, origin, query, HttpError } from '../../_lib/http.js';
-import { parseCookies } from '../../_lib/auth.js';
 import {
+  parseCookies, appendCookie, cookieAttrs,
   findAccountByEmail, findAccountByProvider, createAccount, updateAccount,
   sessionFor, signToken, setSessionCookie, cleanName, normaliseEmail,
 } from '../../_lib/auth.js';
