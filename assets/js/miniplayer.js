@@ -42,6 +42,9 @@ export function openMiniplayer(video, { startAt = 0, playing = true } = {}) {
     volume: store.settings.volume,
     muted: store.settings.muted,
     rate: store.settings.rate,
+    // Shortcuts stay with the page, not the floating window — otherwise space
+    // would pause the corner video instead of scrolling.
+    keyboard: false,
   });
 
   // Persist the resume point on the same cadence as the watch page.
