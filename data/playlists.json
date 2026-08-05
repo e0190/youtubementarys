@@ -1,29 +1,43 @@
 {
   "playlists": [
     {
-      "id": "pl_open_licence",
-      "title": "Everything under an open licence",
-      "description": "Films you can legally download, remix and re-cut — every asset published alongside the finished piece.",
-      "channelId": "ch_openframe",
+      "id": "pl_cold_war",
+      "title": "The Cold War at home",
+      "description": "Civil defence, rationing and Soviet laboratories — what the twentieth century told its citizens while it was happening.",
+      "channelId": "ch_prelinger",
       "videoIds": [
-        "v_elephants_dream",
-        "v_big_buck_bunny",
-        "v_sintel",
-        "v_tears_of_steel"
+        "v_duck_and_cover",
+        "v_wartime_nutrition",
+        "v_revival_of_organisms",
+        "v_personal_hygiene"
       ],
       "visibility": "public"
     },
     {
-      "id": "pl_short_watch",
-      "title": "Under two minutes",
+      "id": "pl_under_ten",
+      "title": "Under ten minutes",
       "description": "A quick lap of the catalog when you don't have an evening to give it.",
-      "channelId": "ch_gearhouse",
+      "channelId": null,
       "videoIds": [
-        "v_grand_challenge",
-        "v_gti_review",
-        "v_outback_dirt",
-        "v_bullrun",
+        "v_park_conscious",
+        "v_spot_news",
+        "v_good_eating",
+        "v_automotive_service",
         "v_me_at_the_zoo"
+      ],
+      "visibility": "public"
+    },
+    {
+      "id": "pl_how_it_was_made",
+      "title": "How it was made",
+      "description": "Industry explaining itself to the public, from banana plantations to the fifty-millionth car off the line.",
+      "channelId": "ch_machineage",
+      "videoIds": [
+        "v_about_bananas",
+        "v_automotive_service",
+        "v_achievement_usa",
+        "v_from_the_ground_up",
+        "v_spot_news"
       ],
       "visibility": "public"
     }
