@@ -116,11 +116,8 @@ for (const v of videos) {
   if (!channelIds.has(v.channelId)) note(`catalog: video ${v.id} → missing channel ${v.channelId}`);
   if (v.seriesId && !seriesIds.has(v.seriesId)) note(`catalog: video ${v.id} → missing series ${v.seriesId}`);
   if (!v.durationSec) note(`catalog: video ${v.id} has no duration`);
-  if (v.source?.type === 'youtube' && !/^[\w-]{11}$/.test(v.source.youtubeId || '')) {
-    note(`catalog: video ${v.id} has an invalid YouTube id`);
-  }
-  if (v.source?.type === 'file' && !/^https?:\/\//.test(v.source.src || '')) {
-    note(`catalog: video ${v.id} has an invalid file src`);
+  if (!/^https?:\/\//.test(v.source?.src || '')) {
+    note(`catalog: video ${v.id} has no playable source URL`);
   }
 }
 
@@ -153,6 +150,10 @@ for (const file of jsFiles.filter((f) => f.includes(`assets${'/'}js`) || f.inclu
   }
   if (/api\.github\.com/.test(source)) {
     note(`secret: ${relative(ROOT, file)} talks to the GitHub API directly — that belongs on the server`);
+  }
+  // This site hosts its own uploads; nothing should reach for YouTube.
+  if (/youtube\.com|ytimg\.com|youtu\.be/.test(source)) {
+    note(`youtube: ${relative(ROOT, file)} still references YouTube`);
   }
 }
 
