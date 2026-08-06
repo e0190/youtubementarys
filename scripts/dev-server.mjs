@@ -143,6 +143,25 @@ const loadedEnv = await loadEnv();
 // Session cookies must work over http://localhost.
 process.env.YM_INSECURE_COOKIES = '1';
 
+/**
+ * Without a GITHUB_TOKEN, persist to .dev-storage/ instead so sign-up, Studio
+ * and comments can all be exercised locally without writing to the real repo.
+ * The catalog is seeded from data/ on first run.
+ */
+if (!process.env.GITHUB_TOKEN && !process.env.YM_LOCAL_STORAGE_DIR) {
+  const storageDir = join(ROOT, '.dev-storage');
+  process.env.YM_LOCAL_STORAGE_DIR = storageDir;
+
+  const { mkdir, copyFile } = await import('node:fs/promises');
+  await mkdir(join(storageDir, 'data'), { recursive: true });
+  for (const name of ['channels.json', 'videos.json', 'series.json', 'playlists.json', 'stats.json']) {
+    const target = join(storageDir, 'data', name);
+    if (!existsSync(target) && existsSync(join(ROOT, 'data', name))) {
+      await copyFile(join(ROOT, 'data', name), target);
+    }
+  }
+}
+
 const routes = await buildRoutes();
 
 const server = createServer(async (req, res) => {
