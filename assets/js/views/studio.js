@@ -245,54 +245,33 @@ function openVideoForm(existing) {
   const topics = topicPicker(v.topics || []);
   const errorBox = el('div', { class: 'form-error', hidden: true });
 
-  const lookupBtn = button('Fetch details', {
+  // Reads the file's real duration from its metadata, so nobody has to guess.
+  const probeBtn = button('Read length', {
     variant: 'subtle',
-    onClick: async () => {
-      const id = parseYouTubeId(youtubeId.value);
-      if (!id) { errorBox.textContent = 'Paste a YouTube URL or id first.'; errorBox.hidden = false; return; }
-      try {
-        const { videos, complete } = await api.lookupYouTube(id);
-        const found = videos[0];
-        if (!found) { toast('No video found with that id.'); return; }
-
-        if (!title.value.trim()) title.value = found.title;
-        if (found.description && !description.value.trim()) description.value = found.description;
-        if (found.thumbnail && !thumbnail.value.trim()) thumbnail.value = found.thumbnail;
-        if (found.publishedAt) {
-          published.value = found.publishedAt;
-          if (!year.value) year.value = found.publishedAt.slice(0, 4);
-        }
-        if (found.durationSec) duration.value = timecode(found.durationSec);
-        if (found.views && (!views.value || views.value === '0')) views.value = String(found.views);
-
-        if (complete) {
-          toast('Details filled in from YouTube');
-        } else {
-          // oEmbed can't report a duration, so ask for the one thing missing.
-          toast('Got the title and thumbnail — enter the length yourself, or set YOUTUBE_API_KEY to fetch it automatically.',
-            { duration: 7000 });
-          duration.focus();
-        }
-      } catch (err) {
-        toast(err.message, { duration: 6000 });
-      }
+    onClick: () => {
+      const url = fileSrc.value.trim();
+      if (!url) { errorBox.textContent = 'Enter the video URL first.'; errorBox.hidden = false; return; }
+      const probe = el('video', { preload: 'metadata' });
+      const stop = setTimeout(() => { probe.remove(); toast('Could not read that file — check the URL and its CORS rules.', { duration: 7000 }); }, 15000);
+      probe.addEventListener('loadedmetadata', () => {
+        clearTimeout(stop);
+        duration.value = timecode(Math.round(probe.duration) || 0);
+        probe.remove();
+        toast('Length read from the file');
+      });
+      probe.addEventListener('error', () => {
+        clearTimeout(stop);
+        probe.remove();
+        toast('That URL isn’t a playable video file.', { duration: 6000 });
+      });
+      probe.src = url;
     },
   });
 
-  const youtubeRow = field('YouTube URL or id',
-    el('div', { style: { display: 'flex', gap: '.5rem' } }, youtubeId, lookupBtn),
-    'Accepts youtu.be, /watch?v=, /embed/ and /shorts/ links.');
-  const fileRow = field('Video file URL', fileSrc, 'A direct, CORS-enabled MP4/WebM or HLS URL.');
+  const fileRow = field('Video file URL',
+    el('div', { style: { display: 'flex', gap: '.5rem' } }, fileSrc, probeBtn),
+    'A direct, CORS-enabled MP4, WebM or HLS URL.');
   const posterRow = field('Poster image', poster, 'Shown before playback starts.');
-
-  const syncSourceRows = () => {
-    const yt = sourceType.value === 'youtube';
-    youtubeRow.hidden = !yt;
-    fileRow.hidden = yt;
-    posterRow.hidden = yt;
-  };
-  sourceType.addEventListener('change', syncSourceRows);
-  syncSourceRows();
 
   modal({
     title: isNew ? 'Add video' : 'Edit video',
