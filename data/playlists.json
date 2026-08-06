@@ -22,8 +22,7 @@
         "v_park_conscious",
         "v_spot_news",
         "v_good_eating",
-        "v_automotive_service",
-        "v_me_at_the_zoo"
+        "v_automotive_service"
       ],
       "visibility": "public"
     },

@@ -7,8 +7,15 @@
       "description": "A young girl's mirror image teaches her the fundamentals of good posture. Classroom health filmmaking at its most literal — and its most quietly strange.\n\nPublic domain, Prelinger Archives.\n\n#Health #History",
       "publishedAt": "1953-01-01",
       "durationSec": 641,
-      "topics": ["Health", "History"],
-      "tags": ["prelinger", "public domain", "education"],
+      "topics": [
+        "Health",
+        "History"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "education"
+      ],
       "views": 10635045,
       "likes": 21400,
       "thumbnail": "https://archive.org/services/img/HealthYo1953",
@@ -30,8 +37,15 @@
       "description": "The structure of the skin, good cleanliness habits, the proper way to wash, and the correct use of soap.\n\nPublic domain, Prelinger Archives.\n\n#Health #Science",
       "publishedAt": "1949-01-01",
       "durationSec": 631,
-      "topics": ["Health", "Science"],
-      "tags": ["prelinger", "public domain", "education"],
+      "topics": [
+        "Health",
+        "Science"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "education"
+      ],
       "views": 2901640,
       "likes": 7300,
       "thumbnail": "https://archive.org/services/img/Careofth1949",
@@ -53,8 +67,16 @@
       "description": "A military training drama in which the residents of a barracks convince a sloppy soldier to clean up his act — with, for reasons never explained, a great many folk songs about cleanliness.\n\nPublic domain, Prelinger Archives.\n\n#Health #War #Music",
       "publishedAt": "1950-01-01",
       "durationSec": 897,
-      "topics": ["Health", "War", "Music"],
-      "tags": ["prelinger", "public domain", "military"],
+      "topics": [
+        "Health",
+        "War",
+        "Music"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "military"
+      ],
       "views": 2435910,
       "likes": 9100,
       "thumbnail": "https://archive.org/services/img/Personal1950",
@@ -76,8 +98,15 @@
       "description": "Ralph learns the five food groups, achieves a balanced diet, and has measurably more fun as a direct result of his better health.\n\nPublic domain, Prelinger Archives.\n\n#Health #Food",
       "publishedAt": "1954-01-01",
       "durationSec": 625,
-      "topics": ["Health", "Food"],
-      "tags": ["prelinger", "public domain", "nutrition"],
+      "topics": [
+        "Health",
+        "Food"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "nutrition"
+      ],
       "views": 5425056,
       "likes": 14200,
       "thumbnail": "https://archive.org/services/img/EatforHe1954",
@@ -99,8 +128,15 @@
       "description": "A drama about gluttony and \"hidden hunger\" — the well-fed people who eat badly enough to malnourish themselves anyway.\n\nPublic domain, Prelinger Archives.\n\n#Health #Food",
       "publishedAt": "1951-01-01",
       "durationSec": 586,
-      "topics": ["Health", "Food"],
-      "tags": ["prelinger", "public domain", "nutrition"],
+      "topics": [
+        "Health",
+        "Food"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "nutrition"
+      ],
       "views": 964361,
       "likes": 3100,
       "thumbnail": "https://archive.org/services/img/GoodEati1951",
@@ -122,8 +158,15 @@
       "description": "Told from a child's point of view: why children should train themselves in good sleeping habits, the advantages a well-rested kid holds over his poor-sleeping classmate, and dreams presented — reassuringly — as a normal part of the night.\n\nPublic domain, Prelinger Archives.\n\n#Health #Science",
       "publishedAt": "1950-01-01",
       "durationSec": 644,
-      "topics": ["Health", "Science"],
-      "tags": ["prelinger", "public domain", "sleep"],
+      "topics": [
+        "Health",
+        "Science"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "sleep"
+      ],
       "views": 5942362,
       "likes": 16800,
       "thumbnail": "https://archive.org/services/img/Sleepfor1950",
@@ -138,7 +181,6 @@
       "year": 1950,
       "rating": "TV-G"
     },
-
     {
       "id": "v_about_bananas",
       "title": "About Bananas",
@@ -146,8 +188,16 @@
       "description": "A complete presentation of the banana industry, from clearing the jungle and planting the crop through to the fruit's arrival in American markets. Eleven minutes of empire, told entirely as logistics.\n\nPublic domain, Prelinger Archives.\n\n#Food #Economics #Travel",
       "publishedAt": "1935-01-01",
       "durationSec": 664,
-      "topics": ["Food", "Economics", "Travel"],
-      "tags": ["prelinger", "public domain", "industry"],
+      "topics": [
+        "Food",
+        "Economics",
+        "Travel"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "industry"
+      ],
       "views": 27198468,
       "likes": 61200,
       "thumbnail": "https://archive.org/services/img/AboutBan1935",
@@ -169,8 +219,15 @@
       "description": "A dramatisation of how photographs are transmitted by wire — an exciting new technology in the 1930s, and the moment news photography stopped travelling by train.\n\nPublic domain, Prelinger Archives.\n\n#Technology #History",
       "publishedAt": "1937-01-01",
       "durationSec": 555,
-      "topics": ["Technology", "History"],
-      "tags": ["prelinger", "public domain", "journalism"],
+      "topics": [
+        "Technology",
+        "History"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "journalism"
+      ],
       "views": 1067236,
       "likes": 4200,
       "thumbnail": "https://archive.org/services/img/SpotNews1937",
@@ -192,8 +249,15 @@
       "description": "Opportunities for employment servicing America's vast motor fleet — a recruitment film for the garage trade, made when the garage trade was the future.\n\nPublic domain, Prelinger Archives.\n\n#Technology #Economics",
       "publishedAt": "1940-01-01",
       "durationSec": 602,
-      "topics": ["Technology", "Economics"],
-      "tags": ["prelinger", "public domain", "cars"],
+      "topics": [
+        "Technology",
+        "Economics"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "cars"
+      ],
       "views": 3180674,
       "likes": 8800,
       "thumbnail": "https://archive.org/services/img/Automoti1940",
@@ -215,8 +279,15 @@
       "description": "General Motors celebrates the production of its fifty-millionth automobile with a parade through Flint, Michigan. The high-water mark of an industrial town, filmed by the company that made it one.\n\nPublic domain, Prelinger Archives.\n\n#History #Economics",
       "publishedAt": "1955-01-01",
       "durationSec": 615,
-      "topics": ["History", "Economics"],
-      "tags": ["prelinger", "public domain", "cars"],
+      "topics": [
+        "History",
+        "Economics"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "cars"
+      ],
       "views": 928162,
       "likes": 3600,
       "thumbnail": "https://archive.org/services/img/Achievem1955",
@@ -231,7 +302,6 @@
       "year": 1955,
       "rating": "TV-G"
     },
-
     {
       "id": "v_duck_and_cover",
       "title": "Duck and Cover",
@@ -239,8 +309,17 @@
       "description": "Selected for the National Film Registry as a culturally and historically significant motion picture. Bert the Turtle shows American schoolchildren what to do in the event of an atomic attack — the single most recognisable artefact of civil-defence filmmaking.\n\nPublic domain, Prelinger Archives.\n\n#History #War #Politics",
       "publishedAt": "1951-01-01",
       "durationSec": 555,
-      "topics": ["History", "War", "Politics"],
-      "tags": ["prelinger", "public domain", "civil defense", "cold war"],
+      "topics": [
+        "History",
+        "War",
+        "Politics"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "civil defense",
+        "cold war"
+      ],
       "views": 935996,
       "likes": 28400,
       "thumbnail": "https://archive.org/services/img/DuckandC1951",
@@ -259,8 +338,15 @@
       "description": "A genuinely unsettling record of Soviet resuscitation experiments conducted by Dr. S. S. Bryukhonenko at the Institute of Experimental Physiology and Therapy in Voronezh. Narrated by Professor Walter B. Cannon.\n\nContains distressing footage of animal experimentation.\n\nPublic domain, Prelinger Archives.\n\n#Science #History",
       "publishedAt": "1940-01-01",
       "durationSec": 1172,
-      "topics": ["Science", "History"],
-      "tags": ["prelinger", "public domain", "medicine"],
+      "topics": [
+        "Science",
+        "History"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "medicine"
+      ],
       "views": 766498,
       "likes": 12900,
       "thumbnail": "https://archive.org/services/img/Experime1940",
@@ -279,8 +365,15 @@
       "description": "Produced by Encyclopaedia Britannica Films in collaboration with Stewart A. Koser, PhD, of the Department of Bacteriology and Parasitology at the University of Chicago. A patient, microscope-led account of the organisms that both preserve and threaten us.\n\nPublic domain, Prelinger Archives.\n\n#Science #Health",
       "publishedAt": "1950-01-01",
       "durationSec": 615,
-      "topics": ["Science", "Health"],
-      "tags": ["prelinger", "public domain", "biology"],
+      "topics": [
+        "Science",
+        "Health"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "biology"
+      ],
       "views": 1845341,
       "likes": 6400,
       "thumbnail": "https://archive.org/services/img/bacteria_friend_and_foe",
@@ -299,8 +392,16 @@
       "description": "An elegy to recreation and relaxation in America's state and national parks, from the era when the parks were being built as fast as they could be filmed.\n\nPublic domain, Prelinger Archives.\n\n#Environment #Nature #Travel",
       "publishedAt": "1938-01-01",
       "durationSec": 462,
-      "topics": ["Environment", "Nature", "Travel"],
-      "tags": ["prelinger", "public domain", "parks"],
+      "topics": [
+        "Environment",
+        "Nature",
+        "Travel"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "parks"
+      ],
       "views": 2520681,
       "likes": 8200,
       "thumbnail": "https://archive.org/services/img/ParkCons1938",
@@ -319,8 +420,16 @@
       "description": "The wartime work of public welfare agencies in the field of nutrition — rationing, requisition and the domestic front presented as a branch of the war effort.\n\nPublic domain, Prelinger Archives.\n\n#War #Health #History",
       "publishedAt": "1943-01-01",
       "durationSec": 622,
-      "topics": ["War", "Health", "History"],
-      "tags": ["prelinger", "public domain", "wwii"],
+      "topics": [
+        "War",
+        "Health",
+        "History"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "wwii"
+      ],
       "views": 962298,
       "likes": 3400,
       "thumbnail": "https://archive.org/services/img/WartimeN1943",
@@ -339,8 +448,16 @@
       "description": "A nineteen-minute promotional film for Nutrilite, a 1950s food supplement — and an unusually complete look at how a health product built its own scientific vocabulary.\n\nPublic domain, Prelinger Archives.\n\n#Food #Economics #Health",
       "publishedAt": "1954-01-01",
       "durationSec": 1145,
-      "topics": ["Food", "Economics", "Health"],
-      "tags": ["prelinger", "public domain", "advertising"],
+      "topics": [
+        "Food",
+        "Economics",
+        "Health"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "advertising"
+      ],
       "views": 10534099,
       "likes": 19700,
       "thumbnail": "https://archive.org/services/img/FromtheG1954",
@@ -359,8 +476,15 @@
       "description": "Actress Gale Storm and family take a road trip in their Chevrolet and review the dos and don'ts of automobile travel. A sponsored travelogue that doubles as a portrait of the new interstate age.\n\nPublic domain, Prelinger Archives.\n\n#Travel #History",
       "publishedAt": "1954-01-01",
       "durationSec": 641,
-      "topics": ["Travel", "History"],
-      "tags": ["prelinger", "public domain", "road trip"],
+      "topics": [
+        "Travel",
+        "History"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "road trip"
+      ],
       "views": 872245,
       "likes": 2900,
       "thumbnail": "https://archive.org/services/img/HowtoGoP1954",
@@ -379,8 +503,15 @@
       "description": "How young children must behave to avoid transmitting germs to one another — ten minutes that shaped a generation's relationship with the handkerchief.\n\nPublic domain, Prelinger Archives.\n\n#Health #History",
       "publishedAt": "1947-01-01",
       "durationSec": 625,
-      "topics": ["Health", "History"],
-      "tags": ["prelinger", "public domain", "education"],
+      "topics": [
+        "Health",
+        "History"
+      ],
+      "tags": [
+        "prelinger",
+        "public domain",
+        "education"
+      ],
       "views": 5744948,
       "likes": 13100,
       "thumbnail": "https://archive.org/services/img/JoanAvoi1947",
@@ -390,43 +521,6 @@
         "poster": "https://archive.org/services/img/JoanAvoi1947"
       },
       "year": 1947,
-      "rating": "TV-G"
-    },
-
-    {
-      "id": "v_me_at_the_zoo",
-      "title": "Me at the zoo",
-      "channelId": "ch_firstlight",
-      "description": "Nineteen seconds filmed at San Diego Zoo in April 2005 — the first video ever uploaded to YouTube, and the start of everything that followed.\n\nThis entry streams through the YouTube engine: the catalog stores only the video id, and playback runs via the IFrame API inside this site's own controls.\n\n#History #Technology",
-      "publishedAt": "2005-04-23",
-      "durationSec": 19,
-      "topics": ["History", "Technology"],
-      "tags": ["archive", "internet history"],
-      "views": 348000000,
-      "likes": 18400000,
-      "source": {
-        "type": "youtube",
-        "youtubeId": "jNQXAC9IVRw"
-      },
-      "year": 2005,
-      "rating": "TV-G"
-    },
-    {
-      "id": "v_big_buck_bunny",
-      "title": "Big Buck Bunny",
-      "channelId": "ch_firstlight",
-      "description": "The Blender Foundation's second open movie, and the one that proved the model worked twice: every asset, rig and render setting was published alongside the finished film.\n\nA second YouTube-sourced entry, useful for comparing the two playback engines side by side.\n\nLicensed CC BY 3.0 — Blender Foundation.\n\n#Art #Technology",
-      "publishedAt": "2008-05-10",
-      "durationSec": 635,
-      "topics": ["Art", "Technology"],
-      "tags": ["animation", "blender", "open source"],
-      "views": 21400000,
-      "likes": 312000,
-      "source": {
-        "type": "youtube",
-        "youtubeId": "aqz-KE-bpKQ"
-      },
-      "year": 2008,
       "rating": "TV-G"
     }
   ]

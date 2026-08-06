@@ -11,9 +11,16 @@
       "verified": true,
       "subscribers": 412000,
       "joined": "2002-11-04",
-      "topics": ["History", "Health", "Science"],
+      "topics": [
+        "History",
+        "Health",
+        "Science"
+      ],
       "links": [
-        { "label": "Prelinger Archives", "url": "https://archive.org/details/prelinger" }
+        {
+          "label": "Prelinger Archives",
+          "url": "https://archive.org/details/prelinger"
+        }
       ]
     },
     {
@@ -27,24 +34,17 @@
       "verified": true,
       "subscribers": 268000,
       "joined": "2004-05-19",
-      "topics": ["Technology", "Economics", "Travel"],
+      "topics": [
+        "Technology",
+        "Economics",
+        "Travel"
+      ],
       "links": [
-        { "label": "Internet Archive", "url": "https://archive.org/details/movies" }
+        {
+          "label": "Internet Archive",
+          "url": "https://archive.org/details/movies"
+        }
       ]
-    },
-    {
-      "id": "ch_firstlight",
-      "handle": "firstlight",
-      "name": "First Light",
-      "tagline": "Where the internet started filming itself.",
-      "description": "A small archive channel about the early web — the first uploads, the first formats, and the people who did not know they were making history. These entries stream from YouTube.",
-      "avatar": null,
-      "banner": null,
-      "verified": false,
-      "subscribers": 128000,
-      "joined": "2015-01-20",
-      "topics": ["History", "Technology", "Art"],
-      "links": []
     }
   ]
 }
