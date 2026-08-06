@@ -1,38 +1,11 @@
-// One player, two engines.
+// The video player.
 //
-// A video's `source.type` decides whether playback runs through the YouTube
-// IFrame API or a native <video> element. Both are wrapped in the same
-// interface (play/pause/seek/…) and the same custom control bar, so the rest of
-// the app never has to care which one it got.
+// Wraps a native <video> element in custom controls: scrubber with buffered
+// range, volume, playback speed, captions, theater mode, full screen and the
+// keyboard shortcuts people expect. Playback is driven through a small Engine
+// interface so the surrounding UI never touches the media element directly.
 
 import { el, timecode, clamp, emitter, throttle } from './util.js';
-
-/* ---------- YouTube IFrame API loader ---------- */
-
-let ytReady = null;
-
-function loadYouTubeAPI() {
-  if (ytReady) return ytReady;
-  ytReady = new Promise((resolve, reject) => {
-    if (window.YT?.Player) return resolve(window.YT);
-
-    // The API calls this global exactly once when it finishes loading.
-    const previous = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof previous === 'function') previous();
-      resolve(window.YT);
-    };
-
-    if (!document.querySelector('script[data-yt-api]')) {
-      const script = el('script', { src: 'https://www.youtube.com/iframe_api', async: true });
-      script.dataset.ytApi = '1';
-      script.onerror = () => reject(new Error('Could not load the YouTube player.'));
-      document.head.append(script);
-    }
-    setTimeout(() => reject(new Error('The YouTube player timed out.')), 15000);
-  });
-  return ytReady;
-}
 
 /* ---------- engines ---------- */
 
@@ -47,101 +20,6 @@ class Engine {
   get rates() { return [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]; }
   get hasCaptions() { return false; }
   setCaptions() {}
-}
-
-class YouTubeEngine extends Engine {
-  constructor(bus, mountEl, { youtubeId, startAt = 0, autoplay = false }) {
-    super(bus);
-    this.mountEl = mountEl;
-    this.pollTimer = null;
-    this.captionsOn = true;
-    this.ready = false;
-
-    const host = el('div', { class: 'yt-host' });
-    mountEl.append(host);
-
-    loadYouTubeAPI().then((YT) => {
-      if (this.destroyed) return;
-      this.yt = new YT.Player(host, {
-        videoId: youtubeId,
-        playerVars: {
-          autoplay: autoplay ? 1 : 0,
-          start: Math.floor(startAt) || 0,
-          controls: 0,        // we draw our own
-          modestbranding: 1,
-          rel: 0,
-          playsinline: 1,
-          iv_load_policy: 3,  // no annotation overlays
-          disablekb: 1,       // our keyboard handler owns shortcuts
-          origin: location.origin,
-        },
-        events: {
-          onReady: () => {
-            if (this.destroyed) return;
-            this.ready = true;
-            this.startPolling();
-            bus.emit('ready');
-            bus.emit('durationchange', this.getDuration());
-          },
-          onStateChange: (e) => {
-            const S = window.YT.PlayerState;
-            if (e.data === S.PLAYING) { bus.emit('play'); bus.emit('durationchange', this.getDuration()); }
-            else if (e.data === S.PAUSED) bus.emit('pause');
-            else if (e.data === S.ENDED) bus.emit('ended');
-            else if (e.data === S.BUFFERING) bus.emit('waiting');
-          },
-          onPlaybackRateChange: (e) => bus.emit('ratechange', e.data),
-          onError: (e) => bus.emit('error', youtubeErrorMessage(e.data)),
-        },
-      });
-    }).catch((err) => bus.emit('error', err.message));
-  }
-
-  startPolling() {
-    clearInterval(this.pollTimer);
-    // The IFrame API has no timeupdate event, so we sample instead.
-    this.pollTimer = setInterval(() => {
-      if (this.destroyed || !this.ready) return;
-      this.bus.emit('timeupdate', this.getTime(), this.getDuration());
-    }, 250);
-  }
-
-  play() { this.yt?.playVideo?.(); }
-  pause() { this.yt?.pauseVideo?.(); }
-  seek(t) { this.yt?.seekTo?.(Math.max(0, t), true); this.bus.emit('timeupdate', t, this.getDuration()); }
-  getTime() { return this.ready ? this.yt?.getCurrentTime?.() || 0 : 0; }
-  getDuration() { return this.ready ? this.yt?.getDuration?.() || 0 : 0; }
-  getBuffered() { return this.ready ? this.yt?.getVideoLoadedFraction?.() || 0 : 0; }
-  setVolume(v) { this.yt?.setVolume?.(Math.round(clamp(v, 0, 1) * 100)); }
-  setMuted(m) { m ? this.yt?.mute?.() : this.yt?.unMute?.(); }
-  setRate(r) { this.yt?.setPlaybackRate?.(r); }
-
-  get rates() { return this.yt?.getAvailablePlaybackRates?.() || super.rates; }
-  get hasCaptions() { return true; }
-
-  setCaptions(on) {
-    this.captionsOn = on;
-    // loadModule/unloadModule is the only supported captions toggle on the
-    // IFrame API; it is undocumented but stable and widely relied on.
-    try { on ? this.yt?.loadModule?.('captions') : this.yt?.unloadModule?.('captions'); } catch { /* ignore */ }
-  }
-
-  destroy() {
-    this.destroyed = true;
-    clearInterval(this.pollTimer);
-    try { this.yt?.destroy?.(); } catch { /* already gone */ }
-    this.mountEl.replaceChildren();
-  }
-}
-
-function youtubeErrorMessage(code) {
-  return {
-    2: 'That YouTube video id looks malformed.',
-    5: 'This video can’t play in the HTML5 player.',
-    100: 'That video was removed or made private on YouTube.',
-    101: 'The uploader disabled embedding for this video.',
-    150: 'The uploader disabled embedding for this video.',
-  }[code] || `YouTube playback error (${code}).`;
 }
 
 class FileEngine extends Engine {
