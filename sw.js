@@ -1,15 +1,21 @@
 // Service worker.
 //
 // Strategy:
-//   app shell  — cache-first, refreshed in the background (stale-while-revalidate)
-//   data/*.json — network-first, so catalog edits show up immediately, with the
-//                 cached copy as an offline fallback
-//   everything else (YouTube, thumbnails, video files) — straight to the network
+//   code (JS/CSS/HTML) — network-first, cache only as an offline fallback
+//   data/*.json        — network-first, so catalog changes show up immediately
+//   everything else    — straight to the network (thumbnails, video files)
 //
-// Bump CACHE_VERSION whenever the shell files change, or clients will keep
-// serving the old bundle.
+// Code is deliberately NOT served cache-first. ES modules have to be
+// version-consistent with each other: if app.js is from one deploy and util.js
+// from the next, the import fails at link time and the whole application stops
+// executing — a blank page rather than a degraded one. Stale-while-revalidate
+// guarantees that skew eventually happens, so the shell cache exists purely to
+// keep the site usable offline, never to serve a live visitor a mixed bundle.
+//
+// Bump CACHE_VERSION on any release. `activate` deletes every cache that
+// doesn't match, which is what un-sticks a browser holding an older bundle.
 
-const CACHE_VERSION = 'ym-v2';
+const CACHE_VERSION = 'ym-v3';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -30,6 +36,7 @@ const SHELL = [
   './assets/js/player.js',
   './assets/js/components.js',
   './assets/js/miniplayer.js',
+  './assets/js/upload.js',
   './assets/js/views/home.js',
   './assets/js/views/watch.js',
   './assets/js/views/channel.js',
@@ -38,8 +45,11 @@ const SHELL = [
   './assets/js/views/library.js',
   './assets/js/views/playlist.js',
   './assets/js/views/studio.js',
+  './assets/js/views/upload.js',
   './assets/js/views/settings.js',
 ];
+
+const isCode = (url) => /\.(?:js|mjs|css|html)$/.test(url.pathname) || url.pathname === '/';
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
@@ -62,13 +72,25 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
+// The page can ask to be cut loose entirely — see the recovery guard in
+// index.html, which fires when a module fails to load.
+self.addEventListener('message', (event) => {
+  if (event.data?.type !== 'reset') return;
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((key) => caches.delete(key)));
+    await self.registration.unregister();
+    event.source?.postMessage({ type: 'reset-done' });
+  })());
+});
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
 
-  // Only handle our own origin — never intercept YouTube, thumbnails or media.
+  // Only handle our own origin — never intercept thumbnails or video files.
   if (url.origin !== self.location.origin) return;
 
   // Range requests (video seeking) must go straight to the network.
@@ -79,24 +101,21 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) return;
 
   if (url.pathname.includes('/data/') && url.pathname.endsWith('.json')) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(networkFirst(request, DATA_CACHE));
     return;
   }
 
-  // Navigations always resolve to the app shell — the hash carries the route.
-  if (request.mode === 'navigate') {
-    event.respondWith((async () => {
-      const cached = await caches.match('./index.html');
-      return cached || fetch(request);
-    })());
+  // Navigations and code both come from the network when it's reachable.
+  if (request.mode === 'navigate' || isCode(url)) {
+    event.respondWith(networkFirst(request, SHELL_CACHE, { fallbackToShell: request.mode === 'navigate' }));
     return;
   }
 
-  event.respondWith(staleWhileRevalidate(request));
+  event.respondWith(cacheFirst(request));
 });
 
-async function networkFirst(request) {
-  const cache = await caches.open(DATA_CACHE);
+async function networkFirst(request, cacheName, { fallbackToShell = false } = {}) {
+  const cache = await caches.open(cacheName);
   try {
     const response = await fetch(request);
     if (response.ok) cache.put(request, response.clone());
@@ -104,18 +123,20 @@ async function networkFirst(request) {
   } catch (err) {
     const cached = await cache.match(request);
     if (cached) return cached;
+    // Offline on a deep link — the app shell can still boot and route.
+    if (fallbackToShell) {
+      const shell = await caches.match('./index.html');
+      if (shell) return shell;
+    }
     throw err;
   }
 }
 
-async function staleWhileRevalidate(request) {
+async function cacheFirst(request) {
   const cache = await caches.open(SHELL_CACHE);
   const cached = await cache.match(request);
-  const network = fetch(request)
-    .then((response) => {
-      if (response.ok) cache.put(request, response.clone());
-      return response;
-    })
-    .catch(() => cached);
-  return cached || network;
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) cache.put(request, response.clone());
+  return response;
 }
