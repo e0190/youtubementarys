@@ -85,9 +85,16 @@ export function route(handler, { methods = ['GET'] } = {}) {
   };
 }
 
-/** Absolute origin of the current request, honouring Vercel's proxy headers. */
+/**
+ * Absolute origin of the current request.
+ *
+ * Vercel always sets x-forwarded-proto. Falling back to the socket rather than
+ * assuming https matters for Google sign-in: the redirect_uri has to match the
+ * scheme the browser actually used, or the OAuth exchange is rejected.
+ */
 export function origin(req) {
-  const proto = req.headers['x-forwarded-proto'] || 'https';
+  const forwarded = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const proto = forwarded || (req.socket?.encrypted ? 'https' : 'http');
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   return `${proto}://${host}`;
 }
