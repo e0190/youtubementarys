@@ -1,11 +1,15 @@
 // Catalog CRUD: /api/catalog/videos, /channels, /series, /playlists
 //
-// GET is public. POST (upsert) and DELETE require an admin session, so the
-// browser no longer needs — and can no longer hold — a GitHub token.
+// GET is public. Writes follow ownership rather than a blanket admin check:
+// anyone signed in can post videos to their own channel and edit or delete
+// what they posted. Administrators can touch anything, and only they can
+// create the shared structures (other people's channels, series, published
+// playlists).
 
-import { route, json, readJsonBody, query, badRequest, notFound } from '../_lib/http.js';
-import { requireAdmin } from '../_lib/auth.js';
+import { route, json, readJsonBody, query, badRequest, notFound, forbidden } from '../_lib/http.js';
+import { requireSession, requireAdmin, isAdmin } from '../_lib/auth.js';
 import { readJSON, updateJSON } from '../_lib/storage.js';
+import { ensureChannel, channelIdFor, ownsChannel } from '../_lib/channels.js';
 
 const COLLECTIONS = {
   videos: { path: 'data/videos.json', key: 'videos' },
@@ -32,7 +36,6 @@ const list = (v, max = 200, len = 120) =>
   (Array.isArray(v) ? v : []).filter((x) => typeof x === 'string' && x.length <= len).slice(0, max);
 
 const ID_RE = /^[\w-]{1,80}$/;
-const YT_RE = /^[\w-]{11}$/;
 
 function requireId(value, label) {
   const id = text(value, 80);
@@ -53,24 +56,22 @@ function urlOrNull(value, label) {
 }
 
 function cleanVideo(body) {
-  const type = body.source?.type === 'file' ? 'file' : 'youtube';
-  let source;
-  if (type === 'youtube') {
-    const ytId = text(body.source?.youtubeId, 20);
-    if (!YT_RE.test(ytId)) throw badRequest('That is not a valid YouTube video id.');
-    source = { type: 'youtube', youtubeId: ytId };
-  } else {
-    const src = urlOrNull(body.source?.src, 'Video file URL');
-    if (!src) throw badRequest('A video file URL is required.');
-    source = { type: 'file', src };
-    const poster = urlOrNull(body.source?.poster, 'Poster URL');
-    if (poster) source.poster = poster;
-    const captions = (Array.isArray(body.source?.captions) ? body.source.captions : [])
-      .slice(0, 12)
-      .map((c) => ({ lang: text(c.lang, 12) || 'en', label: text(c.label, 60) || 'Subtitles', src: urlOrNull(c.src, 'Caption URL') }))
-      .filter((c) => c.src);
-    if (captions.length) source.captions = captions;
-  }
+  const src = urlOrNull(body.source?.src, 'Video URL');
+  if (!src) throw badRequest('A video file is required.');
+
+  const source = { type: 'file', src };
+  const poster = urlOrNull(body.source?.poster, 'Thumbnail URL');
+  if (poster) source.poster = poster;
+
+  const captions = (Array.isArray(body.source?.captions) ? body.source.captions : [])
+    .slice(0, 12)
+    .map((c) => ({
+      lang: text(c.lang, 12) || 'en',
+      label: text(c.label, 60) || 'Subtitles',
+      src: urlOrNull(c.src, 'Caption URL'),
+    }))
+    .filter((c) => c.src);
+  if (captions.length) source.captions = captions;
 
   const title = text(body.title, 200);
   if (!title) throw badRequest('A title is required.');
@@ -123,6 +124,7 @@ function cleanChannel(body) {
     links: (Array.isArray(body.links) ? body.links : []).slice(0, 10)
       .map((l) => ({ label: text(l.label, 60), url: urlOrNull(l.url, 'Link URL') }))
       .filter((l) => l.url),
+    ...(body.ownerId ? { ownerId: requireId(body.ownerId, 'Owner id') } : {}),
   };
 }
 
@@ -165,6 +167,46 @@ const CLEANERS = {
   playlists: cleanPlaylist,
 };
 
+/* ---------- authorisation ---------- */
+
+/** Can `session` create or overwrite this record? */
+async function authoriseWrite(name, record, session, existing) {
+  if (isAdmin(session)) return record;
+
+  if (name === 'videos') {
+    // Posting is open, but only onto your own channel — and editing is limited
+    // to what you posted. Both checks matter: without the second, anyone could
+    // overwrite someone else's video by reusing its id.
+    if (existing && existing.channelId !== channelIdFor(session.sub)) {
+      throw forbidden('That video belongs to someone else.');
+    }
+    const channel = await ensureChannel(session);
+    return { ...record, channelId: channel.id };
+  }
+
+  if (name === 'channels') {
+    if (!ownsChannel(session, record.id)) {
+      throw forbidden('You can only edit your own channel.');
+    }
+    // Reserved fields stay as they were, whatever the request said.
+    return {
+      ...record,
+      verified: existing?.verified ?? false,
+      subscribers: existing?.subscribers ?? 0,
+      ownerId: session.sub,
+    };
+  }
+
+  throw forbidden(`Only administrators can change ${name}.`);
+}
+
+function authoriseDelete(name, existing, session) {
+  if (isAdmin(session)) return;
+  if (name === 'videos' && existing.channelId === channelIdFor(session.sub)) return;
+  if (name === 'channels' && ownsChannel(session, existing.id)) return;
+  throw forbidden('That isn’t yours to delete.');
+}
+
 /* ---------- handler ---------- */
 
 export default route(async (req, res) => {
@@ -176,34 +218,45 @@ export default route(async (req, res) => {
     return;
   }
 
-  const session = requireAdmin(req);
+  // Series and published playlists stay curated; videos and channels are open
+  // to their owners.
+  const session = (name === 'series' || name === 'playlists')
+    ? requireAdmin(req)
+    : requireSession(req);
+
   const body = await readJsonBody(req);
 
   if (req.method === 'DELETE') {
     const id = requireId(body.id, 'Id');
-    let removed = false;
+    const { data: current } = await readJSON(path, { fresh: true });
+    const existing = (current?.[key] || []).find((x) => x.id === id);
+    if (!existing) throw notFound('That item no longer exists.');
+    authoriseDelete(name, existing, session);
+
     await updateJSON(path, (data) => {
       const items = data?.[key] || [];
       if (!items.some((x) => x.id === id)) return undefined;
-      removed = true;
       return { ...(data || {}), [key]: items.filter((x) => x.id !== id) };
-    }, { message: `studio: remove ${name} ${id} (${session.email})`, fallback: { [key]: [] } });
+    }, { message: `catalog: remove ${name} ${id} (${session.email})`, fallback: { [key]: [] } });
 
-    if (!removed) throw notFound('That item no longer exists.');
     json(res, 200, { ok: true, id });
     return;
   }
 
   // POST — upsert
-  const record = CLEANERS[name](body);
-  const { data } = await updateJSON(path, (current) => {
-    const items = current?.[key] || [];
+  const draft = CLEANERS[name](body);
+  const { data: current } = await readJSON(path, { fresh: true });
+  const existing = (current?.[key] || []).find((x) => x.id === draft.id);
+  const record = await authoriseWrite(name, draft, session, existing);
+
+  const { data } = await updateJSON(path, (state) => {
+    const items = state?.[key] || [];
     const i = items.findIndex((x) => x.id === record.id);
     const next = items.slice();
     if (i >= 0) next[i] = record;
     else next.unshift(record);
-    return { ...(current || {}), [key]: next };
-  }, { message: `studio: save ${name} ${record.id} (${session.email})`, fallback: { [key]: [] } });
+    return { ...(state || {}), [key]: next };
+  }, { message: `catalog: save ${name} ${record.id} (${session.email})`, fallback: { [key]: [] } });
 
   json(res, 200, { item: record, count: data[key].length });
 }, { methods: ['GET', 'POST', 'DELETE'] });
