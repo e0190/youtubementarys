@@ -305,23 +305,20 @@ function openVideoForm(existing) {
           const name = title.value.trim();
           if (!name) return fail('A title is required.', title);
 
-          let source;
-          if (sourceType.value === 'youtube') {
-            const id = parseYouTubeId(youtubeId.value);
-            if (!id) return fail('That doesn’t look like a YouTube URL or video id.', youtubeId);
-            source = { type: 'youtube', youtubeId: id };
-          } else {
-            const url = fileSrc.value.trim();
-            if (!url) return fail('A video file URL is required.', fileSrc);
-            source = { type: 'file', src: url, ...(poster.value.trim() ? { poster: poster.value.trim() } : {}) };
-            if (Array.isArray(src.captions) && src.captions.length) source.captions = src.captions;
-          }
+          const url = fileSrc.value.trim();
+          if (!url) return fail('A video file URL is required.', fileSrc);
+          const source = {
+            type: 'file',
+            src: url,
+            ...(poster.value.trim() ? { poster: poster.value.trim() } : {}),
+          };
+          if (Array.isArray(src.captions) && src.captions.length) source.captions = src.captions;
 
           const seconds = parseDuration(duration.value);
           if (!seconds) return fail('Enter a duration, like 52:00 or 1:02:33.', duration);
 
           const record = {
-            id: v.id || makeId('v', name, source.youtubeId || ''),
+            id: v.id || makeId('v', name, String(Math.random()).slice(2, 8)),
             title: name,
             channelId: channelId.value,
             description: description.value.trim(),
