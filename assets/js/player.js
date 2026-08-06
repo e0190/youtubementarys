@@ -213,12 +213,13 @@ export function createPlayer(container, video, opts = {}) {
   const source = video.source || {};
   let engine;
   try {
-    engine = source.type === 'youtube'
-      ? new YouTubeEngine(bus, surface, { youtubeId: source.youtubeId, startAt, autoplay })
-      : new FileEngine(bus, surface, {
-          src: source.src, poster: source.poster || video.thumbnail,
-          captions: source.captions || [], startAt, autoplay,
-        });
+    engine = new FileEngine(bus, surface, {
+      src: source.src,
+      poster: source.poster || video.thumbnail,
+      captions: source.captions || [],
+      startAt,
+      autoplay,
+    });
   } catch (err) {
     bus.emit('error', err.message);
     engine = new Engine(bus);
