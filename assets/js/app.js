@@ -413,18 +413,24 @@ function registerServiceWorker() {
   if (location.protocol === 'file:') return; // no SW on file:// — dev convenience
   if (location.hostname === 'localhost') return; // never cache during development
 
+  // Whether this page was already being controlled decides what a later
+  // controllerchange means: on a first install there is nothing stale in
+  // memory, so reloading would just be a flicker for every new visitor.
+  const wasControlled = Boolean(navigator.serviceWorker.controller);
+
   window.addEventListener('load', async () => {
     try {
       const reg = await navigator.serviceWorker.register('sw.js');
-      // Ask the browser to look for a new worker now rather than on its own
-      // schedule, so a deploy reaches people on their next visit.
+      // Look for a new worker now rather than on the browser's own schedule,
+      // so a deploy reaches people on their next visit.
       reg.update().catch(() => {});
 
-      // When a new worker takes over, the modules in memory belong to the
-      // previous deploy. Reload once so the page and its code agree.
+      // A new worker taking over an already-controlled page means the modules
+      // in memory belong to the previous deploy. Reload once so page and code
+      // agree — this is what stops a mixed bundle from ever being visible.
       let reloading = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (reloading) return;
+        if (!wasControlled || reloading) return;
         reloading = true;
         location.reload();
       });
