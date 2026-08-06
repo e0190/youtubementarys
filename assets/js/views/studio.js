@@ -7,7 +7,7 @@
 // curates everything — reassigning channels, building series and playlists,
 // and removing anything that shouldn't be here.
 
-import { el, slugify, uid, timecode, compact, longDate, setChildren } from '../util.js';
+import { el, slugify, uid, timecode, compact, longDate, setChildren, parseYouTubeId } from '../util.js';
 import { TOPICS } from '../config.js';
 import { api } from '../api.js';
 import { auth, isAdmin, isSignedIn, promptSignIn } from '../auth.js';
