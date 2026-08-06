@@ -80,5 +80,59 @@
 </noscript>
 
 <script type="module" src="assets/js/app.js"></script>
+
+<script>
+// Recovery guard.
+//
+// If a service worker ever serves a mixed bundle — one module from an old
+// deploy, another from the new one — the ES module graph fails to link and
+// app.js never executes. The page then sits there with a working header and an
+// empty body, and because app.js is what registers the service worker, it can
+// never replace itself. That is a trap the app cannot escape on its own.
+//
+// This script is inline, so it runs even when every module is dead. If the app
+// hasn't signalled that it booted, it throws away all caches, unregisters the
+// worker and reloads once. sessionStorage makes it strictly once per tab, so a
+// genuine startup failure can't become a reload loop.
+(function () {
+  var KEY = 'ym.recovered';
+  var BOOT_GRACE_MS = 8000;
+
+  function recover(reason) {
+    if (sessionStorage.getItem(KEY)) return;   // already tried; don't loop
+    sessionStorage.setItem(KEY, reason || '1');
+    console.warn('[recovery] app did not start (' + reason + ') — clearing caches and reloading');
+
+    var done = function () { location.reload(); };
+    var jobs = [];
+
+    if (window.caches && caches.keys) {
+      jobs.push(caches.keys().then(function (keys) {
+        return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+      }));
+    }
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+      jobs.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+        return Promise.all(regs.map(function (r) { return r.unregister(); }));
+      }));
+    }
+
+    Promise.all(jobs).then(done, done);
+    setTimeout(done, 4000); // never hang on a wedged worker
+  }
+
+  // A module that fails to link fires an error event on its script element.
+  var script = document.querySelector('script[type="module"][src]');
+  if (script) script.addEventListener('error', function () { recover('script-error'); });
+
+  // Catch-all: whatever went wrong, the app should have set this by now.
+  setTimeout(function () {
+    if (!window.__ymBooted) recover('no-boot');
+  }, BOOT_GRACE_MS);
+
+  // A successful start clears the marker so the next real failure can recover.
+  window.addEventListener('ym:booted', function () { sessionStorage.removeItem(KEY); });
+})();
+</script>
 </body>
 </html>
