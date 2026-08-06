@@ -197,13 +197,17 @@ function videosPanel() {
         }, { size: 18 }))));
   });
 
+  // Without an API key there is nothing to search, so the primary action goes
+  // straight to the form — where pasting a URL still fills in what it can.
   const addButtons = el('div', { class: 'section-actions' },
-    button('Add from YouTube', {
-      variant: 'primary', icon: 'search',
-      onClick: () => requireChannel(() => openYouTubePicker()),
-    }),
-    button('Add manually', {
-      variant: 'subtle', icon: 'plus',
+    auth.features.youtubeSearch
+      ? button('Add from YouTube', {
+          variant: 'primary', icon: 'search',
+          onClick: () => requireChannel(() => openYouTubePicker()),
+        })
+      : null,
+    button(auth.features.youtubeSearch ? 'Add manually' : 'Add a video', {
+      variant: auth.features.youtubeSearch ? 'subtle' : 'primary', icon: 'plus',
       onClick: () => requireChannel(() => openVideoForm(null)),
     }));
 
@@ -224,9 +228,13 @@ function videosPanel() {
     videos.length
       ? table(['Title', 'Channel', 'Source', 'Length', 'Views', 'Published', ''], rows)
       : emptyState('film', 'No videos yet',
-          'Search YouTube and pick what belongs in your catalog.',
-          button('Add from YouTube', {
-            variant: 'primary', onClick: () => requireChannel(() => openYouTubePicker()),
+          auth.features.youtubeSearch
+            ? 'Search YouTube and pick what belongs in your catalog.'
+            : 'Paste a YouTube URL and the details are filled in for you.',
+          button(auth.features.youtubeSearch ? 'Add from YouTube' : 'Add a video', {
+            variant: 'primary',
+            onClick: () => requireChannel(() =>
+              (auth.features.youtubeSearch ? openYouTubePicker() : openVideoForm(null))),
           })));
 }
 
