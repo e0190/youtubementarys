@@ -70,10 +70,56 @@ export async function searchYouTube(q, { pageToken, channelId, order = 'relevanc
   };
 }
 
+export const hasApiKey = () => Boolean(process.env.YOUTUBE_API_KEY);
+
+/**
+ * Title, channel and thumbnail without an API key.
+ *
+ * YouTube's oEmbed endpoint is public and unauthenticated. It doesn't carry
+ * duration or view counts, so `durationSec` comes back as 0 and the caller has
+ * to ask for it — but it means pasting a URL works on a deployment with no
+ * Google Cloud setup at all.
+ */
+export async function oembedLookup(ids) {
+  const wanted = (Array.isArray(ids) ? ids : []).filter((id) => /^[\w-]{11}$/.test(id)).slice(0, 10);
+
+  const results = await Promise.all(wanted.map(async (id) => {
+    const url = `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${id}`)}&format=json`;
+    try {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) return null;
+      const body = await res.json();
+      return {
+        youtubeId: id,
+        title: body.title || '',
+        description: '',
+        channelTitle: body.author_name || '',
+        channelId: '',
+        publishedAt: '',
+        thumbnail: body.thumbnail_url || `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`,
+        durationSec: 0,          // not available without the Data API
+        views: 0,
+        likes: 0,
+        tags: [],
+        embeddable: true,
+        partial: true,           // tells the client that duration is missing
+        url: `https://www.youtube.com/watch?v=${id}`,
+      };
+    } catch {
+      return null;
+    }
+  }));
+
+  return results.filter(Boolean);
+}
+
 /** Full details for up to 50 ids, shaped the way the Studio form wants them. */
 export async function hydrateVideos(ids) {
   const wanted = (Array.isArray(ids) ? ids : []).filter((id) => /^[\w-]{11}$/.test(id)).slice(0, 50);
   if (!wanted.length) return [];
+
+  // No key configured — fall back to what oEmbed can tell us.
+  if (!hasApiKey()) return oembedLookup(wanted);
 
   const body = await call('videos', {
     part: 'snippet,contentDetails,statistics,status',
