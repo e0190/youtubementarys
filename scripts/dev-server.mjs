@@ -135,6 +135,10 @@ async function serveStatic(res, pathname) {
     return false;
   }
 
+  return sendFile(res, filePath);
+}
+
+async function sendFile(res, filePath) {
   try {
     const body = await readFile(filePath);
     res.statusCode = 200;
