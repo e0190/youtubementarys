@@ -70,9 +70,8 @@ export const api = {
   postComment: (videoId, text) => request(`/api/comments/${encodeURIComponent(videoId)}`, { method: 'POST', body: { text } }),
   deleteComment: (videoId, id) => request(`/api/comments/${encodeURIComponent(videoId)}`, { method: 'DELETE', body: { id } }),
 
-  /* youtube picker */
-  searchYouTube: (params) => request(`/api/youtube/search?${new URLSearchParams(params)}`),
-  lookupYouTube: (ids) => request(`/api/youtube/lookup?ids=${encodeURIComponent([].concat(ids).join(','))}`),
+  /* uploads */
+  signUpload: (info) => request('/api/upload/sign', { method: 'POST', body: info }),
 };
 
 /**

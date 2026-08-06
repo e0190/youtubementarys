@@ -87,7 +87,7 @@ function letterAvatar(name, size) {
   }, initials(name));
 }
 
-/** Thumbnail <img> that falls back to a lower YouTube resolution, then a glyph. */
+/** Thumbnail <img> that falls back to the poster, then to a glyph. */
 export function thumbImage(video, alt = '') {
   const primary = thumbnailFor(video);
   const fallback = thumbnailFallback(video);
@@ -104,11 +104,6 @@ export function thumbImage(video, alt = '') {
   };
 
   img.addEventListener('error', degrade);
-  // A video with no maxresdefault still returns 200 — with a 120x90 grey
-  // placeholder — so a successful load isn't proof the image is real.
-  img.addEventListener('load', () => {
-    if (img.naturalWidth <= 120 && img.naturalHeight <= 90) degrade();
-  });
   return img;
 }
 

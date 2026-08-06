@@ -13,7 +13,7 @@ export const authEvents = emitter();
 export const auth = {
   user: null,          // { id, email, name, isAdmin } when signed in
   features: {          // what this deployment actually has configured
-    auth: false, google: false, storage: false, youtubeSearch: false,
+    auth: false, google: false, storage: false, uploads: false,
   },
   ready: false,
 };
@@ -30,7 +30,7 @@ export async function loadSession() {
   } catch {
     // A static deploy with no functions, or the network is down. Guest mode.
     auth.user = null;
-    auth.features = { auth: false, google: false, storage: false, youtubeSearch: false };
+    auth.features = { auth: false, google: false, storage: false, uploads: false };
   }
   auth.ready = true;
   authEvents.emit('change', auth.user);

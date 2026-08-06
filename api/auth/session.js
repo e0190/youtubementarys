@@ -7,6 +7,7 @@
 import { route, json } from '../_lib/http.js';
 import { currentSession, isAdmin, authConfigured } from '../_lib/auth.js';
 import { isConfigured as storageConfigured } from '../_lib/storage.js';
+import { isConfigured as uploadsConfigured } from '../_lib/s3.js';
 
 export default route(async (req, res) => {
   const session = currentSession(req);
@@ -24,7 +25,7 @@ export default route(async (req, res) => {
       auth: authConfigured() && storageConfigured(),
       google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
       storage: storageConfigured(),
-      youtubeSearch: Boolean(process.env.YOUTUBE_API_KEY),
+      uploads: uploadsConfigured(),
     },
   });
 });

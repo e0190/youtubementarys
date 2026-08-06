@@ -190,19 +190,15 @@ export const playlistVideos = (playlist) =>
 
 export function thumbnailFor(video) {
   if (!video) return null;
-  if (video.thumbnail) return video.thumbnail;
-  if (video.source?.type === 'youtube' && video.source.youtubeId) {
-    return `https://i.ytimg.com/vi/${video.source.youtubeId}/maxresdefault.jpg`;
-  }
-  return video.source?.poster || null;
+  return video.thumbnail || video.source?.poster || null;
 }
 
-/** Lower-res YouTube thumb that always exists — used as an onerror fallback. */
+/** Second choice if the main thumbnail fails to load. */
 export function thumbnailFallback(video) {
-  if (video?.source?.type === 'youtube' && video.source.youtubeId) {
-    return `https://i.ytimg.com/vi/${video.source.youtubeId}/mqdefault.jpg`;
-  }
-  return null;
+  if (!video) return null;
+  const primary = video.thumbnail;
+  const poster = video.source?.poster;
+  return primary && poster && primary !== poster ? poster : null;
 }
 
 export const viewsOf = (video) => (video?.views || 0) + (store.stats.views?.[video?.id] || 0);

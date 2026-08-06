@@ -256,21 +256,3 @@ export function emitter() {
     clear() { map.clear(); },
   };
 }
-
-/** Extract a YouTube video id from a URL or return the input if it already is one. */
-export function parseYouTubeId(input) {
-  const s = String(input || '').trim();
-  if (/^[\w-]{11}$/.test(s)) return s;
-  const patterns = [
-    /(?:youtube\.com\/watch\?[^#]*\bv=)([\w-]{11})/,
-    /youtu\.be\/([\w-]{11})/,
-    /youtube\.com\/embed\/([\w-]{11})/,
-    /youtube\.com\/shorts\/([\w-]{11})/,
-    /youtube\.com\/live\/([\w-]{11})/,
-  ];
-  for (const re of patterns) {
-    const m = s.match(re);
-    if (m) return m[1];
-  }
-  return null;
-}
