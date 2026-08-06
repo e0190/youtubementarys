@@ -27,6 +27,12 @@ import studioView from './views/studio.js';
 import uploadView from './views/upload.js';
 import settingsView from './views/settings.js';
 
+// Tells the recovery guard in index.html that the module graph linked and the
+// app is alive. Set at module scope, before any async work, so a later runtime
+// error doesn't get misread as a stale-bundle failure.
+window.__ymBooted = true;
+window.dispatchEvent(new Event('ym:booted'));
+
 const viewHost = $('#view');
 let viewTeardowns = [];
 
@@ -405,10 +411,26 @@ function registerRoutes() {
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   if (location.protocol === 'file:') return; // no SW on file:// — dev convenience
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch((err) => {
+  if (location.hostname === 'localhost') return; // never cache during development
+
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+      // Ask the browser to look for a new worker now rather than on its own
+      // schedule, so a deploy reaches people on their next visit.
+      reg.update().catch(() => {});
+
+      // When a new worker takes over, the modules in memory belong to the
+      // previous deploy. Reload once so the page and its code agree.
+      let reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloading) return;
+        reloading = true;
+        location.reload();
+      });
+    } catch (err) {
       console.warn('[sw] registration failed:', err.message);
-    });
+    }
   });
 }
 
