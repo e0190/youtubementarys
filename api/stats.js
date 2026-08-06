@@ -5,7 +5,7 @@
 // so it can nudge a counter but not rewrite one.
 
 import { route, json, readJsonBody, badRequest } from './_lib/http.js';
-import { updateJSON, readJSON } from './_lib/github.js';
+import { updateJSON, readJSON } from './_lib/storage.js';
 
 const PATH = 'data/stats.json';
 const MAX_KEYS = 50;

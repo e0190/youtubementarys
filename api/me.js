@@ -8,7 +8,7 @@
 
 import { route, json, readJsonBody, badRequest } from './_lib/http.js';
 import { requireSession } from './_lib/auth.js';
-import { readJSON, writeJSON } from './_lib/github.js';
+import { readJSON, writeJSON } from './_lib/storage.js';
 
 const path = (userId) => `data/users/${userId}.json`;
 
