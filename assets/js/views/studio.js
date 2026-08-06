@@ -224,15 +224,13 @@ function videosPanel() {
 function openVideoForm(existing) {
   const isNew = !existing;
   const v = existing || {};
-  const src = v.source || { type: 'youtube' };
+  const src = v.source || {};
   const channels = store.catalog.channels;
 
   const title = textInput(v.title, { placeholder: 'Planet Earth II: Islands', maxlength: '200' });
-  const sourceType = selectInput([['youtube', 'YouTube video'], ['file', 'Hosted file (MP4/HLS)']], src.type);
-  const youtubeId = textInput(src.youtubeId, { placeholder: 'Paste a YouTube URL or 11-character id' });
   const fileSrc = textInput(src.src, { placeholder: 'https://cdn.example.com/film.mp4' });
   const poster = textInput(src.poster, { placeholder: 'https://…/poster.jpg' });
-  const thumbnail = textInput(v.thumbnail, { placeholder: 'Leave blank to use the YouTube thumbnail' });
+  const thumbnail = textInput(v.thumbnail, { placeholder: 'Leave blank to use the poster image' });
   const channelId = selectInput(channels.map((c) => [c.id, c.name]), v.channelId || channels[0]?.id);
   const description = textArea(v.description, { placeholder: 'What is this documentary about?', maxlength: '5000' });
   const duration = textInput(v.durationSec ? timecode(v.durationSec) : '', { placeholder: '1:02:33 or seconds' });
