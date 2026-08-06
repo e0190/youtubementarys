@@ -515,16 +515,28 @@ function openVideoForm(existing) {
       const id = parseYouTubeId(youtubeId.value);
       if (!id) { errorBox.textContent = 'Paste a YouTube URL or id first.'; errorBox.hidden = false; return; }
       try {
-        const { videos } = await api.lookupYouTube(id);
+        const { videos, complete } = await api.lookupYouTube(id);
         const found = videos[0];
         if (!found) { toast('No video found with that id.'); return; }
+
         if (!title.value.trim()) title.value = found.title;
-        if (!description.value.trim()) description.value = found.description;
-        duration.value = timecode(found.durationSec);
-        published.value = found.publishedAt;
-        if (!year.value) year.value = found.publishedAt.slice(0, 4);
-        if (!views.value || views.value === '0') views.value = String(found.views);
-        toast('Details filled in from YouTube');
+        if (found.description && !description.value.trim()) description.value = found.description;
+        if (found.thumbnail && !thumbnail.value.trim()) thumbnail.value = found.thumbnail;
+        if (found.publishedAt) {
+          published.value = found.publishedAt;
+          if (!year.value) year.value = found.publishedAt.slice(0, 4);
+        }
+        if (found.durationSec) duration.value = timecode(found.durationSec);
+        if (found.views && (!views.value || views.value === '0')) views.value = String(found.views);
+
+        if (complete) {
+          toast('Details filled in from YouTube');
+        } else {
+          // oEmbed can't report a duration, so ask for the one thing missing.
+          toast('Got the title and thumbnail — enter the length yourself, or set YOUTUBE_API_KEY to fetch it automatically.',
+            { duration: 7000 });
+          duration.focus();
+        }
       } catch (err) {
         toast(err.message, { duration: 6000 });
       }
