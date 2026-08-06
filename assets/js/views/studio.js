@@ -3,10 +3,11 @@
 // Requires an admin session. Every write goes through /api/catalog/*, which
 // holds the GitHub credentials server-side; nothing sensitive reaches this file.
 //
-// Adding videos is a picker, not a form: search YouTube, tick what you want,
-// and the metadata comes back filled in.
+// Videos are posted from the Upload page; Studio is where an administrator
+// curates everything — reassigning channels, building series and playlists,
+// and removing anything that shouldn't be here.
 
-import { el, slugify, uid, parseYouTubeId, timecode, compact, longDate, debounce, setChildren } from '../util.js';
+import { el, slugify, uid, timecode, compact, longDate, setChildren } from '../util.js';
 import { TOPICS } from '../config.js';
 import { api } from '../api.js';
 import { auth, isAdmin, isSignedIn, promptSignIn } from '../auth.js';
@@ -184,7 +185,6 @@ function videosPanel() {
         el('a', { href: href('/watch', { v: v.id }), style: { fontWeight: '600' } }, v.title),
         el('div', { class: 'muted', style: { fontSize: '.78rem' } }, v.id)),
       el('td', {}, channel?.name || el('span', { class: 'muted' }, 'unknown')),
-      el('td', {}, v.source?.type === 'youtube' ? 'YouTube' : 'File'),
       el('td', {}, timecode(v.durationSec)),
       el('td', {}, compact(v.views || 0)),
       el('td', {}, v.publishedAt ? longDate(v.publishedAt) : '—'),
@@ -197,291 +197,29 @@ function videosPanel() {
         }, { size: 18 }))));
   });
 
-  // Without an API key there is nothing to search, so the primary action goes
-  // straight to the form — where pasting a URL still fills in what it can.
   const addButtons = el('div', { class: 'section-actions' },
-    auth.features.youtubeSearch
-      ? button('Add from YouTube', {
-          variant: 'primary', icon: 'search',
-          onClick: () => requireChannel(() => openYouTubePicker()),
-        })
-      : null,
-    button(auth.features.youtubeSearch ? 'Add manually' : 'Add a video', {
-      variant: auth.features.youtubeSearch ? 'subtle' : 'primary', icon: 'plus',
+    button('Post a video', {
+      variant: 'primary', icon: 'upload',
+      onClick: () => navigate('/upload'),
+    }),
+    button('Add by URL', {
+      variant: 'subtle', icon: 'plus',
       onClick: () => requireChannel(() => openVideoForm(null)),
     }));
 
   return el('div', {},
-    auth.features.youtubeSearch
-      ? null
-      : el('div', { class: 'banner banner-warn' },
-          svgIcon('search', 20),
-          el('div', {},
-            el('div', { class: 'banner-title' }, 'YouTube search isn’t configured'),
-            el('div', { class: 'muted' },
-              'Set YOUTUBE_API_KEY to search and pick videos. Without it you can still paste a video URL — the details are filled in for you where possible.'))),
-
     el('div', { class: 'section-head', style: { marginTop: '0' } },
       el('h2', { class: 'section-title' }, `${videos.length} ${videos.length === 1 ? 'video' : 'videos'}`),
       addButtons),
 
     videos.length
-      ? table(['Title', 'Channel', 'Source', 'Length', 'Views', 'Published', ''], rows)
+      ? table(['Title', 'Channel', 'Length', 'Views', 'Published', ''], rows)
       : emptyState('film', 'No videos yet',
-          auth.features.youtubeSearch
-            ? 'Search YouTube and pick what belongs in your catalog.'
-            : 'Paste a YouTube URL and the details are filled in for you.',
-          button(auth.features.youtubeSearch ? 'Add from YouTube' : 'Add a video', {
-            variant: 'primary',
-            onClick: () => requireChannel(() =>
-              (auth.features.youtubeSearch ? openYouTubePicker() : openVideoForm(null))),
-          })));
+          'Post one from the upload page and it appears here.',
+          button('Post a video', { variant: 'primary', onClick: () => navigate('/upload') })));
 }
 
-/* ---------- the YouTube picker ---------- */
-
-function openYouTubePicker() {
-  const selected = new Map();   // youtubeId -> video metadata
-  let results = [];
-  let nextPageToken = null;
-  let lastQuery = '';
-  let busy = false;
-
-  const resultsHost = el('div', { class: 'picker-grid' });
-  const statusLine = el('div', { class: 'picker-status muted' });
-  const trayCount = el('span', { class: 'picker-tray-count' }, '0 selected');
-  const moreBtn = el('button', { class: 'btn btn-subtle', hidden: true, onclick: () => run(lastQuery, true) }, 'Load more');
-
-  const searchInput = el('input', {
-    class: 'input picker-search', type: 'search',
-    placeholder: 'Search YouTube — or paste a video URL',
-    autocomplete: 'off',
-  });
-  const orderSelect = selectInput(
-    [['relevance', 'Most relevant'], ['viewCount', 'Most viewed'], ['date', 'Newest'], ['rating', 'Top rated']],
-    'relevance');
-  const durationSelect = selectInput(
-    [['', 'Any length'], ['long', 'Over 20 min'], ['medium', '4–20 min'], ['short', 'Under 4 min']], '');
-
-  const channelSelect = selectInput(
-    store.catalog.channels.map((c) => [c.id, c.name]), store.catalog.channels[0]?.id);
-  const seriesSelect = selectInput(
-    [['', 'Not part of a series'], ...store.catalog.series.map((s) => [s.id, s.title])], '');
-  const seasonInput = textInput('1', { type: 'number', min: '1', style: { maxWidth: '6rem' } });
-  const topics = topicPicker([]);
-
-  const addBtn = button('Add selected', {
-    variant: 'primary',
-    disabled: true,
-    onClick: () => commit(),
-  });
-
-  function setBusy(on, message = '') {
-    busy = on;
-    statusLine.textContent = message;
-    searchInput.disabled = on;
-  }
-
-  function paintResults() {
-    if (!results.length) {
-      setChildren(resultsHost);
-      return;
-    }
-    setChildren(resultsHost, ...results.map((v) => {
-      const chosen = selected.has(v.youtubeId);
-      const already = store.catalog.videos.some(
-        (x) => x.source?.type === 'youtube' && x.source.youtubeId === v.youtubeId);
-
-      const card = el('button', {
-        type: 'button',
-        class: `picker-card${chosen ? ' is-selected' : ''}${already ? ' is-existing' : ''}`,
-        'aria-pressed': String(chosen),
-        title: already ? 'Already in your catalog' : v.title,
-        onclick: () => {
-          if (selected.has(v.youtubeId)) selected.delete(v.youtubeId);
-          else selected.set(v.youtubeId, v);
-          paintResults();
-          paintTray();
-        },
-      },
-        el('span', { class: 'picker-thumb' },
-          v.thumbnail
-            ? el('img', { src: v.thumbnail, alt: '', loading: 'lazy' })
-            : el('span', { class: 'thumb-placeholder' }, svgIcon('film', 24)),
-          el('span', { class: 'thumb-duration' }, timecode(v.durationSec)),
-          chosen ? el('span', { class: 'picker-tick' }, svgIcon('check', 18)) : null,
-          already ? el('span', { class: 'picker-existing' }, 'In catalog') : null),
-        el('span', { class: 'picker-card-title' }, v.title),
-        el('span', { class: 'picker-card-meta' },
-          [v.channelTitle, `${compact(v.views)} views`, v.publishedAt?.slice(0, 4)]
-            .filter(Boolean).join(' · ')));
-      return card;
-    }));
-  }
-
-  function paintTray() {
-    const n = selected.size;
-    trayCount.textContent = `${n} selected`;
-    addBtn.disabled = n === 0;
-    addBtn.querySelector('span').textContent = n ? `Add ${n} video${n === 1 ? '' : 's'}` : 'Add selected';
-  }
-
-  async function run(q, append = false) {
-    if (busy) return;
-    const term = q.trim();
-    if (!term) return;
-    lastQuery = term;
-
-    // A pasted URL doesn't need a search — go straight to a lookup.
-    const pastedId = parseYouTubeId(term);
-    if (pastedId && !append) {
-      setBusy(true, 'Looking up that video…');
-      try {
-        const { videos } = await api.lookupYouTube(pastedId);
-        results = videos;
-        nextPageToken = null;
-        moreBtn.hidden = true;
-        if (!videos.length) setBusy(false, 'No video found with that id.');
-        else setBusy(false, `Found “${videos[0].title}”.`);
-        // A single pasted video is almost certainly the one they want.
-        if (videos.length === 1) selected.set(videos[0].youtubeId, videos[0]);
-        paintResults();
-        paintTray();
-      } catch (err) {
-        setBusy(false, err.message);
-      }
-      return;
-    }
-
-    if (!auth.features.youtubeSearch) {
-      setBusy(false, 'Search isn’t configured — paste a YouTube URL instead.');
-      return;
-    }
-
-    setBusy(true, append ? 'Loading more…' : 'Searching YouTube…');
-    try {
-      const data = await api.searchYouTube({
-        q: term,
-        order: orderSelect.value,
-        duration: durationSelect.value,
-        ...(append && nextPageToken ? { pageToken: nextPageToken } : {}),
-      });
-      results = append ? [...results, ...data.videos] : data.videos;
-      nextPageToken = data.nextPageToken;
-      moreBtn.hidden = !nextPageToken;
-      setBusy(false, results.length
-        ? `${results.length} result${results.length === 1 ? '' : 's'}`
-        : 'Nothing matched that search.');
-      paintResults();
-      paintTray();
-    } catch (err) {
-      setBusy(false, err.message);
-    }
-  }
-
-  async function commit() {
-    const channelId = channelSelect.value;
-    const seriesId = seriesSelect.value || null;
-    const season = Number(seasonInput.value) || 1;
-    const chosenTopics = topics.getValue();
-
-    const items = [...selected.values()];
-    addBtn.disabled = true;
-    const pending = toast(`Adding ${items.length} video${items.length === 1 ? '' : 's'}…`, { duration: 120000 });
-
-    // Continue numbering after whatever the series already has.
-    let episode = seriesId
-      ? store.catalog.videos.filter((v) => v.seriesId === seriesId && (v.season || 1) === season).length + 1
-      : 1;
-
-    let added = 0;
-    const failures = [];
-
-    for (const v of items) {
-      const record = {
-        id: makeId('v', v.title, v.youtubeId),
-        title: v.title.slice(0, 200),
-        channelId,
-        description: v.description || '',
-        publishedAt: v.publishedAt || new Date().toISOString().slice(0, 10),
-        durationSec: v.durationSec,
-        topics: chosenTopics,
-        tags: v.tags || [],
-        views: v.views || 0,
-        likes: v.likes || 0,
-        thumbnail: v.thumbnail || null,
-        source: { type: 'youtube', youtubeId: v.youtubeId },
-        ...(v.publishedAt ? { year: Number(v.publishedAt.slice(0, 4)) } : {}),
-        ...(seriesId ? { seriesId, season, episode: episode++ } : {}),
-      };
-      try {
-        await api.saveItem('videos', record);
-        added += 1;
-      } catch (err) {
-        failures.push(`${v.title}: ${err.message}`);
-      }
-    }
-
-    pending.remove();
-    await loadCatalog({ fresh: true });
-
-    if (failures.length) {
-      toast(`Added ${added}, ${failures.length} failed. ${failures[0]}`, { duration: 9000 });
-    } else {
-      toast(`Added ${added} video${added === 1 ? '' : 's'}`);
-    }
-    dialog.close();
-    rerender();
-  }
-
-  const debouncedSearch = debounce(() => run(searchInput.value), 500);
-  searchInput.addEventListener('input', () => {
-    // Pasted URLs resolve instantly; typed queries wait for a pause.
-    if (parseYouTubeId(searchInput.value.trim())) run(searchInput.value);
-    else debouncedSearch();
-  });
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); debouncedSearch.cancel(); run(searchInput.value); }
-  });
-  orderSelect.addEventListener('change', () => run(lastQuery));
-  durationSelect.addEventListener('change', () => run(lastQuery));
-
-  const dialog = modal({
-    title: 'Add videos from YouTube',
-    wide: true,
-    body: el('div', { class: 'picker' },
-      el('div', { class: 'picker-controls' },
-        searchInput,
-        auth.features.youtubeSearch ? orderSelect : null,
-        auth.features.youtubeSearch ? durationSelect : null),
-      statusLine,
-      resultsHost,
-      el('div', { style: { display: 'flex', justifyContent: 'center', padding: '.5rem 0' } }, moreBtn),
-      el('div', { class: 'picker-settings' },
-        el('div', { class: 'form-row-2' },
-          field('Add to channel', channelSelect),
-          field('Part of a series', seriesSelect)),
-        el('div', { class: 'form-row-2' },
-          field('Season', seasonInput, 'Episode numbers continue from what’s already there.'),
-          field('Topics', topics)))),
-    actions: [
-      { label: 'Cancel', variant: 'ghost' },
-    ],
-  });
-
-  // The tray sits with the dialog actions so it stays visible while scrolling.
-  const actionsRow = dialog.dialog.querySelector('.modal-actions');
-  actionsRow.prepend(el('div', { class: 'picker-tray' }, trayCount));
-  actionsRow.append(addBtn);
-
-  paintTray();
-  searchInput.focus();
-  statusLine.textContent = auth.features.youtubeSearch
-    ? 'Search for a documentary, or paste a YouTube URL.'
-    : 'Paste a YouTube URL to look it up.';
-}
-
-/* ---------- manual video form ---------- */
+/* ---------- video form ---------- */
 
 function openVideoForm(existing) {
   const isNew = !existing;
