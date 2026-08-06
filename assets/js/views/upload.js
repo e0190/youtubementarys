@@ -12,7 +12,7 @@ import { el, timecode, slugify, uid, setChildren } from '../util.js';
 import { TOPICS } from '../config.js';
 import { api } from '../api.js';
 import { auth, isSignedIn, promptSignIn } from '../auth.js';
-import { store, loadCatalog } from '../store.js';
+import { loadCatalog } from '../store.js';
 import { probeVideoFile, captureThumbnail, uploadFile, formatBytes } from '../upload.js';
 import { button, toast, emptyState, svgIcon } from '../components.js';
 import { navigate } from '../router.js';
@@ -399,5 +399,3 @@ function buildUploader() {
   updatePublishState();
   return page;
 }
-
-export { store };
