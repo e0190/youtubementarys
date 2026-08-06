@@ -24,6 +24,7 @@ import searchView from './views/search.js';
 import libraryView from './views/library.js';
 import playlistView from './views/playlist.js';
 import studioView from './views/studio.js';
+import uploadView from './views/upload.js';
 import settingsView from './views/settings.js';
 
 const viewHost = $('#view');
@@ -93,7 +94,8 @@ function buildSidebar() {
       navLink('/history', 'History', 'history'),
       navLink('/playlists', 'Playlists', 'library'),
       navLink('/watch-later', 'Watch later', 'clock', { count: store.user.watchLater.length || null }),
-      navLink('/liked', 'Liked videos', 'like')),
+      navLink('/liked', 'Liked videos', 'like'),
+      isSignedIn() ? navLink('/upload', 'Post a video', 'upload') : null),
 
     subs.length
       ? el('div', { class: 'nav-group' },
@@ -269,6 +271,7 @@ function wireSearch() {
 /* ---------- account button & sync badge ---------- */
 
 function paintAccount() {
+  paintUploadButton();
   const host = $('#account-slot');
 
   if (!isSignedIn() && auth.features.auth) {
@@ -292,6 +295,19 @@ function paintAccount() {
   setChildren(host, btn);
 }
 
+/** The camera button — only worth showing to someone who can actually post. */
+function paintUploadButton() {
+  const host = $('#upload-slot');
+  if (!host) return;
+  if (!isSignedIn()) { setChildren(host); return; }
+  setChildren(host, el('a', {
+    class: 'icon-btn upload-btn',
+    href: href('/upload'),
+    'aria-label': 'Post a video',
+    title: 'Post a video',
+  }, svgIcon('upload', 24)));
+}
+
 function openAccountMenu(anchor) {
   closeAnyMenu();
 
@@ -299,6 +315,12 @@ function openAccountMenu(anchor) {
   const items = [
     ...(isSignedIn()
       ? [{ label: 'Signed in as ' + who.email, icon: 'subs', disabled: true }]
+      : []),
+    ...(isSignedIn()
+      ? [
+          { label: 'Your channel', icon: 'subs', action: () => navigate(`/channel/${auth.user.channelId}`) },
+          { label: 'Post a video', icon: 'upload', action: () => navigate('/upload') },
+        ]
       : []),
     { label: 'Settings', icon: 'settings', action: () => navigate('/settings') },
     { label: 'Your playlists', icon: 'library', action: () => navigate('/playlists') },
@@ -367,6 +389,7 @@ function registerRoutes() {
   route('/liked', (ctx) => libraryView({ ...ctx, section: 'liked' }));
   route('/watch-later', (ctx) => libraryView({ ...ctx, section: 'watchLater' }));
   route('/playlists', (ctx) => libraryView({ ...ctx, section: 'playlists' }));
+  route('/upload', uploadView);
   route('/studio', studioView);
   route('/settings', settingsView);
   route('*', () => {

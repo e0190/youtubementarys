@@ -35,6 +35,7 @@ export const UI_ICONS = {
   bell: '<path fill="currentColor" d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6v-5a6 6 0 0 0-5-5.9V4a1 1 0 1 0-2 0v1.1A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"/>',
   studio: '<path fill="currentColor" d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/>',
   settings: ICONS.settings,
+  upload: '<path fill="currentColor" d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4zM10 15v-2.5H7.5v-2H10V8h2v2.5h2.5v2H12V15h-2z"/>',
   film: '<path fill="currentColor" d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/>',
   globe: '<path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-2.9a15.6 15.6 0 0 0-1.3-3.4A8 8 0 0 1 18.9 8zM12 4a14 14 0 0 1 1.7 4h-3.4A14 14 0 0 1 12 4zM4.3 14a8 8 0 0 1 0-4h3.3a16.5 16.5 0 0 0 0 4H4.3zm.8 2h2.9c.3 1.2.8 2.3 1.3 3.4A8 8 0 0 1 5.1 16zm2.9-8H5.1a8 8 0 0 1 4.2-3.4A15.6 15.6 0 0 0 8 8zm4 12a14 14 0 0 1-1.7-4h3.4A14 14 0 0 1 12 20zm2.1-6H9.9a14.7 14.7 0 0 1 0-4h4.2a14.7 14.7 0 0 1 0 4zm.6 5.4c.5-1.1 1-2.2 1.3-3.4h2.9a8 8 0 0 1-4.2 3.4zm1.7-5.4a16.5 16.5 0 0 0 0-4h3.3a8 8 0 0 1 0 4h-3.3z"/>',
 };
