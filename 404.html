@@ -6,28 +6,23 @@
 <title>YoutubeMentries</title>
 <style>
   html, body { height: 100%; margin: 0; background: #0f0f0f; color: #f1f1f1;
-               font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { display: grid; place-content: center; gap: .75rem; height: 100%; text-align: center; padding: 1.5rem; }
+               font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { display: grid; place-content: center; gap: .5rem; height: 100%; text-align: center; padding: 1.5rem; }
+  h1 { font-size: 1.4rem; margin: 0; }
+  p { color: #aaa; margin: 0; }
   a { color: #ff5c5c; }
 </style>
 <script>
-  // GitHub Pages serves this file for any unknown path. The app itself routes
-  // on the hash, so anything that lands here just needs sending back to the
-  // app root with its path preserved as a hash route.
-  (function () {
-    var base = location.pathname.replace(/\/[^/]*$/, '/');
-    var repoRoot = base.split('/').slice(0, 2).join('/') + '/';
-    var rest = location.pathname.slice(repoRoot.length).replace(/^\/+/, '');
-    var target = repoRoot + (location.search || '') + '#/' + rest;
-    if (location.hash) target = repoRoot + '#' + location.hash.slice(1);
-    location.replace(target);
-  })();
+  // vercel.json rewrites every non-asset path to index.html, so this page is a
+  // backstop for other hosts (or a misconfigured deploy). The app routes on the
+  // hash, so sending people to the root is always safe.
+  setTimeout(function () { location.replace('/#/'); }, 1200);
 </script>
 </head>
 <body>
 <main>
-  <h1>Taking you back…</h1>
-  <p>If nothing happens, <a href="/">return to YoutubeMentries</a>.</p>
+  <h1>That page doesn’t exist</h1>
+  <p>Taking you back to <a href="/#/">YoutubeMentries</a>…</p>
 </main>
 </body>
 </html>
