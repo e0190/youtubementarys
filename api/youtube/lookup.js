@@ -5,7 +5,7 @@
 
 import { route, json, query, badRequest } from '../_lib/http.js';
 import { requireAdmin } from '../_lib/auth.js';
-import { hydrateVideos } from './_client.js';
+import { hydrateVideos, hasApiKey } from './_client.js';
 
 export default route(async (req, res) => {
   requireAdmin(req);
@@ -16,5 +16,7 @@ export default route(async (req, res) => {
   const ids = raw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 50);
   const videos = await hydrateVideos(ids);
 
-  json(res, 200, { videos });
+  // `complete` false means duration and view counts are missing because there
+  // is no API key — the client asks for a duration in that case.
+  json(res, 200, { videos, complete: hasApiKey() });
 });
