@@ -330,12 +330,12 @@ export function createPlayer(container, video, opts = {}) {
       el('div', { class: 'player-error-inner' },
         el('strong', {}, 'This video can’t be played'),
         el('p', {}, message),
-        source.type === 'youtube' && source.youtubeId
+        source.src
           ? el('a', {
               class: 'btn btn-ghost',
-              href: `https://www.youtube.com/watch?v=${source.youtubeId}`,
+              href: source.src,
               target: '_blank', rel: 'noopener noreferrer',
-            }, 'Watch on YouTube')
+            }, 'Open the file directly')
           : null));
   });
 
