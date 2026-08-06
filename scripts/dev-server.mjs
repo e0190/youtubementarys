@@ -108,7 +108,18 @@ const MIME = {
 };
 
 async function serveStatic(res, pathname) {
-  let filePath = join(ROOT, decodeURIComponent(pathname).replace(/^\/+/, ''));
+  const clean = decodeURIComponent(pathname).replace(/^\/+/, '');
+
+  // When running on local storage, /data/*.json must come from there — otherwise
+  // Studio would write to .dev-storage while the app kept reading the repo's
+  // copy, and edits would appear to do nothing.
+  const storageDir = process.env.YM_LOCAL_STORAGE_DIR;
+  if (storageDir && clean.startsWith('data/')) {
+    const shadowed = join(storageDir, clean);
+    if (existsSync(shadowed)) return sendFile(res, shadowed);
+  }
+
+  let filePath = join(ROOT, clean);
 
   // Refuse anything that escapes the project directory.
   if (relative(ROOT, filePath).startsWith('..' + sep)) {
