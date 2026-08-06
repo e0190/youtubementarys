@@ -218,7 +218,8 @@ server.listen(PORT, () => {
   console.log(`  http://localhost:${PORT}\n`);
   console.log(`  ${routes.length} API routes:`);
   for (const r of routes) console.log(`    ${r.pattern}`);
+  console.log(`\n  storage: ${process.env.YM_LOCAL_STORAGE_DIR ? '.dev-storage/ (local files)' : 'GitHub'}`);
   console.log(loadedEnv.length
-    ? `\n  .env.local: ${loadedEnv.join(', ')}\n`
-    : '\n  No .env.local — auth and storage will report as unconfigured.\n');
+    ? `  .env.local: ${loadedEnv.join(', ')}\n`
+    : '  No .env.local — auth will report as unconfigured.\n');
 });
