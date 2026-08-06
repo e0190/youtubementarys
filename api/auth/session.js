@@ -6,7 +6,7 @@
 
 import { route, json } from '../_lib/http.js';
 import { currentSession, isAdmin, authConfigured } from '../_lib/auth.js';
-import { isConfigured as storageConfigured } from '../_lib/github.js';
+import { isConfigured as storageConfigured } from '../_lib/storage.js';
 
 export default route(async (req, res) => {
   const session = currentSession(req);

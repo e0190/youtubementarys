@@ -12,7 +12,7 @@ import {
   createHmac, randomBytes, scrypt as _scrypt, timingSafeEqual, randomUUID,
 } from 'node:crypto';
 import { promisify } from 'node:util';
-import { readJSON, updateJSON } from './github.js';
+import { readJSON, updateJSON } from './storage.js';
 import { HttpError, badRequest, unauthorized, conflict } from './http.js';
 
 const scrypt = promisify(_scrypt);

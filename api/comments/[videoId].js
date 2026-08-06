@@ -5,7 +5,7 @@
 
 import { route, json, readJsonBody, query, badRequest, notFound } from '../_lib/http.js';
 import { requireSession, isAdmin } from '../_lib/auth.js';
-import { readJSON, updateJSON } from '../_lib/github.js';
+import { readJSON, updateJSON } from '../_lib/storage.js';
 
 const MAX_COMMENTS = 500;
 const MAX_LENGTH = 2000;
