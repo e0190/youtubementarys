@@ -342,9 +342,7 @@ function buildPlaylistStrip(playlist, current) {
 }
 
 function thumbSrc(video) {
-  if (video.thumbnail) return video.thumbnail;
-  if (video.source?.type === 'youtube') return `https://i.ytimg.com/vi/${video.source.youtubeId}/mqdefault.jpg`;
-  return video.source?.poster || '';
+  return video.thumbnail || video.source?.poster || '';
 }
 
 /* ---------- up next ---------- */
